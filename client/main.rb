@@ -53,43 +53,43 @@ cam_setup = false
 update = lambda{
 
   h.update
+
   $s.get(%w{world ships}).each_key do |id|
-    ships[id] ||= Body.new(game,id,shipinfo)
+    ships[id] ||= Body.new(game,$s,id,shipinfo)
     ship = ships[id]
-    ship.sprite[:x] = $s.get(%w{world ships 1 x})
-    ship.sprite[:y] = $s.get(%w{world ships 1 y})
-    ship.sprite[:rotation] = $s.get(%w{world ships 1 rotation})
-    ship.sprite[:body][:velocity][:x] = $s.get(%w{world ships 1 dx})
-    ship.sprite[:body][:velocity][:y] = $s.get(%w{world ships 1 dy})
+    path = %w{world ships}+[id]
+    ship.sprite[:x] = ship.prop :x
+    ship.sprite[:y] = ship.prop :y
+    ship.sprite[:rotation] = ship.prop :rotation
+    ship.sprite[:body][:velocity][:x] = ship.prop :dx
+    ship.sprite[:body][:velocity][:y] = ship.prop :dy
   end
   
   if ships["1"] 
     ship = ships["1"]
-    #game.camera.bounds = nil
     game.camera.view.x = ship.sprite.x-400
     game.camera.view.y = ship.sprite.y-300
-    nil
-  end
-  if $cursors[:right][:isDown]
-    pressed_ro = true
-    $s.set(%w{world ships 1 throttle_rot},1)
-  elsif $cursors[:left][:isDown]
-    pressed_ro = true
-    $s.set(%w{world ships 1 throttle_rot},-1)
-  elsif pressed_ro
-    pressed_ro = false
-    $s.set(%w{world ships 1 throttle_rot},0)
-  end
+    if $cursors[:right][:isDown]
+      pressed_ro = true
+      ship.set_prop :throttle_rot,1
+    elsif $cursors[:left][:isDown]
+      pressed_ro = true
+      ship.set_prop :throttle_rot,-1
+    elsif pressed_ro
+      pressed_ro = false
+      ship.set_prop :throttle_rot,0
+    end
 
-  if $cursors[:up][:isDown]
-    pressed_ac = true
-    $s.set(%w{world ships 1 throttle_accel},1)
-  elsif $cursors[:down][:isDown]
-    pressed_ac = true
-    $s.set(%w{world ships 1 throttle_accel},-1)
-  elsif pressed_ac
-    pressed_ac = false
-    $s.set(%w{world ships 1 throttle_accel},0)
+    if $cursors[:up][:isDown]
+      pressed_ac = true
+      ship.set_prop :throttle_accel,1
+    elsif $cursors[:down][:isDown]
+      pressed_ac = true
+      ship.set_prop :throttle_accel,-1
+    elsif pressed_ac
+      pressed_ac = false
+      ship.set_prop :throttle_accel,0
+    end
   end
   $s.update
   nil
