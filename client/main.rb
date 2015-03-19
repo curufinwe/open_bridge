@@ -1,5 +1,12 @@
 # ERB
 
+def get_url_params
+  return `window.location.search`.split("&").each.with_object({}) do |param,h|
+    key,val =*param.split("=")
+    h[key] = val
+  end
+end
+
 game = nil
 
 h = nil
@@ -26,7 +33,7 @@ create = lambda{
       game.input.keyboard.addCallbacks(nil, on_down, on_press, on_up);
       `game.native.physics.startSystem(Phaser.Physics.ARCADE)`
       game = $game
-      c = Connector.new
+      c = Connector.new(get_url_params["host"] || "127.0.0.1")
       s = State.new(c)
       $s = s
       c.state = s

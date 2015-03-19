@@ -7,8 +7,9 @@ class Connector
 
   attr_accessor :state
 
-  def initialize(url = "ws://192.168.178.30:9000")
+  def initialize(host)
     @changes = []
+    url = "ws://#{host}:9000"
     @ws = Native(`new WebSocket(url)`)
     @ws.onopen = -> {
       @changes.each do |change|

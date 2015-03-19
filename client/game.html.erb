@@ -2,6 +2,7 @@
 <head>
   <meta charset="utf-8">
   <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <script src="//cdn.jsdelivr.net/phaser/2.2.2/phaser.js"></script>
 
   <script src="//cdn.opalrb.org/opal/current/opal.min.js"></script>
   <script src="//cdn.opalrb.org/opal/current/native.min.js"></script>
@@ -10,21 +11,7 @@
   <link href="style.css" rel="stylesheet" type="text/css">
 </head>
 <body>
-
-  <form action="game.html" method="get">
-
-    Host: <input type="server" size="40" name="host" value="127.0.0.1"><br>
-    Station:<select name="station" size="1"><br>
-      <option>Helm</option>
-      <option>Weapons</option>
-      <option>Engineer</option>
-      <option>Science</option>
-      <option>Communication</option>
-      <option>Captain</option>
-    </select>
-    <input type="submit" value="Play">
-  </form>
-
+  <%= inc("body.html.erb") %>
   <script type = "text/ruby">
     path = "ws://#{`window.location.hostname`}:8080"
     puts "updating from #{path}"
