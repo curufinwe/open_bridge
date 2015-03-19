@@ -1,6 +1,6 @@
 from math import *
 
-from util import get_id, ProtocolError
+from util import get_id, ProtocolError, limited_precision_float
 
 clamp = lambda val, low, high: max(low, min(high, val))
 
@@ -29,12 +29,27 @@ class ShipNode:
     self.damage = 0.0
 
 class Ship:
-  readable_attr = ['x', 'y', 'rotation', 'speed',
-                   'throttle_accel', 'throttle_rot',
-                   'max_accel', 'max_speed_fwd', 'max_speed_bwd', 'max_drot']
-  writable_attr = ['x', 'y', 'rotation', 'speed',
-                   'throttle_accel', 'throttle_rot',
-                   'max_accel', 'max_speed_fwd', 'max_speed_bwd', 'max_drot']
+  readable_attr = { 'x'             : limited_precision_float(5),
+                    'y'             : limited_precision_float(5),
+                    'rotation'      : limited_precision_float(5),
+                    'speed'         : limited_precision_float(5),
+                    'throttle_accel': limited_precision_float(5),
+                    'throttle_rot'  : limited_precision_float(5),
+                    'max_accel'     : limited_precision_float(5),
+                    'max_speed_fwd' : limited_precision_float(5),
+                    'max_speed_bwd' : limited_precision_float(5),
+                    'max_drot'      : limited_precision_float(5)  }
+
+  writable_attr = { 'x'             : float,
+                    'y'             : float,
+                    'rotation'      : float,
+                    'speed'         : float,
+                    'throttle_accel': float,
+                    'throttle_rot'  : float,
+                    'max_accel'     : float,
+                    'max_speed_fwd' : float,
+                    'max_speed_bwd' : float,
+                    'max_drot'      : float  }
 
   def __init__(self):
     self.id = get_id()
@@ -107,10 +122,11 @@ class Ship:
       raise ProtocolError(reason='Ship diffs should be objects')
     for key in diff:
       if key in self.writable_attr:
+        ctor = self.writable_attr[key]
         try:
-          val = float(diff[key])
+          val = ctor(diff[key])
         except ValueError:
-          raise ProtocolError(reason='Invalid type for field %s, expected float got "%s"' % (key, diff[key]))
+          raise ProtocolError(reason='Invalid type for field %s, expected %s got "%s"' % (key, str(ctor), diff[key]))
         else:
           setattr(self, key, val)
       else:
@@ -121,7 +137,7 @@ class Ship:
 
   def serialize(self):
     dx, dy = self.calc_speed_vector()
-    result = dict((a, getattr(self, a)) for a in self.readable_attr)
-    result['dx'] = dx
-    result['dy'] = dy
+    result = dict((a, ctor(getattr(self, a))) for a, ctor in self.readable_attr.items())
+    result['dx'] = round(dx, 5)
+    result['dy'] = round(dy, 5)
     return result
