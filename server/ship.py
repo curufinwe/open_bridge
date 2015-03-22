@@ -22,11 +22,21 @@ class ShipModule:
     if l > 0:
       self.damage /= len(self.nodes)
 
+  def serialize(self):
+    return { 'nodes' : dict((n._index, 1) for n in self.nodes), 
+             'damage': round(self.damage, 5)                    }
+
 class ShipNode:
   def __init__(self, x, y):
+    self._index = -1 # index in the ship list containing this Node
     self.x      = x
     self.y      = y
     self.damage = 0.0
+
+  def serialize(self):
+    return { 'x'     : round(self.x, 5),
+             'y'     : round(self.y, 5),
+             'damage': round(self.damage, 5) }
 
 class Ship:
   readable_attr = { 'x'             : limited_precision_float(5),
@@ -71,6 +81,7 @@ class Ship:
 
   def addNode(self, node):
     assert isinstance(node, ShipNode)
+    node._index = len(self.nodes)
     self.nodes.append(node)
 
   def addModule(self, module):
@@ -131,13 +142,24 @@ class Ship:
           setattr(self, key, val)
       else:
         raise ProtocolError(reason='Unknown key for ship: %s' % key)
-    self.rotation = clamp(self.rotation,  0.0, 2*pi)
+    self.rotation       = clamp(self.rotation      ,  0.0, 2*pi)
     self.throttle_accel = clamp(self.throttle_accel, -1.0,  1.0)
-    self.throttle_rot   = clamp(self.throttle_rot,   -1.0,  1.0)
+    self.throttle_rot   = clamp(self.throttle_rot  , -1.0,  1.0)
+
+  def serialize_modules(self):
+    res = {}
+    for k, modules in self.modules.items():
+      res[k] = dict((i, m.serialize()) for i, m in enumerate(modules))
+    return res
+
+  def serialize_nodes(self):
+    return dict((idx, node.serialize()) for idx, node in enumerate(self.nodes))
 
   def serialize(self):
     dx, dy = self.calc_speed_vector()
     result = dict((a, ctor(getattr(self, a))) for a, ctor in self.readable_attr.items())
-    result['dx'] = round(dx, 5)
-    result['dy'] = round(dy, 5)
+    result['modules'] = self.serialize_modules()
+    result['nodes']   = self.serialize_nodes()
+    result['dx']      = round(dx, 5)
+    result['dy']      = round(dy, 5)
     return result
