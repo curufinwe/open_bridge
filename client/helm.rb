@@ -52,6 +52,7 @@ class HelmInterface
       angle = Math.atan2(dirx,diry)*Math::RadToDeg
       shipa = @ship.sprite[:rotation]*Math::RadToDeg
       adiff = angle-shipa
+      adiff = Math.clamp_angle180(adiff)
       throttle_rot = (Math.clamp(-90, adiff, 90) / 90.0)
       lenSQ = dirx**2 + diry**2
       throttle_speed = 0
