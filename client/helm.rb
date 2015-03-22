@@ -1,3 +1,11 @@
+
+class DegInfo
+  attr_accessor :x, :y, :text
+  def initialize(x,y, text)
+    @x,@y,@text = x,y, text
+  end
+end
+
 class HelmInterface
   attr_accessor :state, :ship
 
@@ -19,6 +27,10 @@ class HelmInterface
     @game.camera.view.y = ship.sprite.y-300
     @helm_nav.x = ship.sprite.x
     @helm_nav.y = ship.sprite.y
+    @deg_indicators.each do |deg|
+      deg.text.x = ship.sprite.x + deg.x
+      deg.text.y = ship.sprite.y + deg.y
+    end
     @helm_nav[:rotation] = ship.sprite[:rotation]+`Math.PI`
     @game.camera[:bounds]=`null`
     
@@ -31,6 +43,7 @@ class HelmInterface
   end
 
   def calc_mouse_pull_throttle
+      @helm_target.visible = @game.input.activePointer.isDown
       mx,my = @game.input.activePointer.worldX, @game.input.activePointer.worldY
       sx, sy = ship.sprite.x, ship.sprite.y
       @helm_target.x=mx
@@ -39,8 +52,6 @@ class HelmInterface
       angle = Math.atan2(dirx,diry)*Math::RadToDeg
       shipa = @ship.sprite[:rotation]*Math::RadToDeg
       adiff = angle-shipa
-      adiff += 360 while adiff < -180
-      adiff -= 360 while adiff > 180
       throttle_rot = (Math.clamp(-90, adiff, 90) / 90.0)
       lenSQ = dirx**2 + diry**2
       throttle_speed = 0
@@ -67,6 +78,19 @@ class HelmInterface
 
     @helm_target = @game.add.sprite(0,0,"helm_target")
     @helm_target.anchor.setTo(0.5,0.5)
+
+    steps = 12
+    @deg_indicators = []
+    (0...steps).each do |ind|
+      deg = ind*(360/steps)
+      desc = Math.clamp_angle360(deg+90).to_s
+      x,y = *Math.dir(deg*Math::DegToRad,220)
+      text = @game.add.text(x,y+2.5, desc, Text::DefaultText);
+      text.anchor.setTo(0.5,0.5)
+      deg = DegInfo.new(x-5, y+5, text)
+      @deg_indicators << deg
+    end
   end
 
 end
+

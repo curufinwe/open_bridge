@@ -14,4 +14,31 @@ module Math
   def self.sqrt(v)
     return `Math.sqrt(v)`
   end
+
+  def self.sin(x)
+    return `Math.sin(x)`
+  end
+
+  def self.cos(x)
+    return `Math.cos(x)`
+  end
+
+  def self.dir(angle, len = 1)
+    x = cos(angle)*len
+    y = sin(angle)*len
+    return x,y
+  end
+
+  def self.clamp_angle180(angle)
+      angle = angle % 360
+      angle += 360 if angle < 0
+      angle -= 360 if angle > 180
+      return angle
+  end
+
+  def self.clamp_angle360(angle)
+      angle = angle % 360
+      angle += 360 if angle < 0
+      return angle
+  end
 end
