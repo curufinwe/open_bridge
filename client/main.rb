@@ -33,6 +33,7 @@ create = lambda{
       input = Input.new(game)
       input.key("ship1","ONE")
       input.key("ship2","TWO")
+      input.key("ship3","THREE")
       input.key("turn_left","LEFT")
       input.key("turn_right","RIGHT")
       input.key("accelerate","UP")
@@ -53,6 +54,7 @@ update = lambda do
   gui.ship ||= ships["1"] if ships["1"]
   input.on("ship1"){ gui.ship = ships["1"] }
   input.on("ship2"){ gui.ship = ships["2"] }
+  input.on("ship3"){ gui.ship = ships["3"] }
 
   state.get(%w{world ships}).each_key do |id|
     ships[id] ||= Ship.new(game, state, id, shipinfo)
