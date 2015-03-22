@@ -22,10 +22,10 @@ class HelmInterface
     @helm_nav[:rotation] = ship.sprite[:rotation]+`Math.PI`
     @game.camera[:bounds]=`null`
     
-    sp, rot = calc_keyboard_throttle
-    mp_sp, mp_rot = calc_mouse_pull_throttle
+     rot,sp = calc_keyboard_throttle
+     mp_rot,mp_sp = calc_mouse_pull_throttle
 
-    sp,rot = mp_sp,mp_rot if @game.input.activePointer.isDown 
+    sp,rot = mp_sp,mp_rot if @game.input.activePointer.isDown
     @ship.set_state(:throttle_speed, sp)
     @ship.set_state(:throttle_rot, rot)
   end
@@ -57,16 +57,16 @@ class HelmInterface
 
   def create(input)
     @input = input
-    @input.on("turn_left"){ |mode,_| if mode == :up then @keyboard_throttle_rot = 0 else @keyboard_throttle_rot -1 end }
+    @input.on("turn_left"){ |mode,_| if mode == :up then @keyboard_throttle_rot = 0 else @keyboard_throttle_rot = -1 end }
     @input.on("turn_right"){|mode,_| if mode == :up then @keyboard_throttle_rot = 0 else @keyboard_throttle_rot = 1 end }
     @input.on("accelerate"){|mode,_| if mode == :up then @keyboard_throttle_speed = 0 else @keyboard_throttle_speed = 1 end }
     @input.on("decelerate"){|mode,_| if mode == :up then @keyboard_throttle_speed = 0 else @keyboard_throttle_speed = -1 end }
+
     @helm_nav = @game.add.sprite(0,0,"helm_nav")
-    @helm_target = @game.add.sprite(0,0,"helm_target")
-    @helm_target2 = @game.add.sprite(0,0,"helm_target")
     @helm_nav.anchor.setTo(0.5,0.5)
+
+    @helm_target = @game.add.sprite(0,0,"helm_target")
     @helm_target.anchor.setTo(0.5,0.5)
-    @helm_target2.anchor.setTo(0.5,0.5)
   end
 
 end

@@ -1,5 +1,8 @@
 # ERB
 
+
+$DEBUG = false
+
 def get_url_params
   params = `window.location.search`.gsub(/^\?/,"").split("&").each.with_object({}) do |param,h|
     key,val =*param.split("=")

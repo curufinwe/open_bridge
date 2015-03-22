@@ -31,7 +31,7 @@ class Ship < Body
   def update
     @sprite[:x] = state :x
     @sprite[:y] = state :y
-    @sprite[:rotation] = state :rotation
+    @sprite[:rotation] = state :direction
     @sprite[:body][:velocity][:x] = state :dx
     @sprite[:body][:velocity][:y] = state :dy
   end

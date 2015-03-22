@@ -37,6 +37,7 @@ class State
     @proposed_state.apply(patch)
     @authoritive_state = @proposed_state.deep_copy
     @last_proposed_state = @proposed_state
+    puts @authoritive_state.inspect if $DEBUG
     @proposed_state = @proposed_state.deep_copy
     @blocks.each(&:call)
   end
