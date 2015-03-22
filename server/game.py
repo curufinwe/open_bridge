@@ -68,7 +68,7 @@ class Game:
       new_state = { 'world': self.world.serialize(), 'client_events': {} }
       diff = calc_diff(client.last_state, new_state)
       msg = json.dumps(diff)
-      if self.debug:
+      if self.debug and len(msg) > 0:
         print('[%s] To  : %s' % (timestamp(), msg))
       client.sendMessage(msg.encode('utf-8'))
       client.last_state = new_state

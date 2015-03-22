@@ -1,14 +1,14 @@
 from math import *
 
-from util import get_id, ProtocolError, limited_precision_float
+from util import get_id, to_int, ProtocolError, limited_precision_float
+from vector import *
 
 clamp = lambda val, low, high: max(low, min(high, val))
 
 class ShipModule:
-  def __init__(self, role):
+  def __init__(self):
     self.nodes  = []
     self.damage = 0.0
-    self.role   = role
 
   def addNode(self, node):
     assert isinstance(node, ShipNode)
@@ -26,12 +26,42 @@ class ShipModule:
     return { 'nodes' : dict((n._index, 1) for n in self.nodes), 
              'damage': round(self.damage, 5)                    }
 
+class ShipEngine(ShipModule):
+  role = 'engine'
+
+class ShipBridge(ShipModule):
+  role = 'bridge'
+
+class ShipFMC(ShipModule): # Flight Management Computer
+  role = 'fmc'
+
 class ShipNode:
+  readable_attr = { 'x'     : limited_precision_float(5),
+                    'y'     : limited_precision_float(5),
+                    'damage': limited_precision_float(5)  }
+  
+  writable_attr = { 'x'     : float,
+                    'y'     : float,
+                    'damage': float }
+
   def __init__(self, x, y):
     self._index = -1 # index in the ship list containing this Node
     self.x      = x
     self.y      = y
     self.damage = 0.0
+
+  def apply_diff(self, diff):
+    if type(diff) != dict:
+      raise ProtocolError(reason='Node diffs should be objects')
+    for key in diff:
+      if key in self.writable_attr:
+        ctor = self.writable_attr[key]
+        try:
+          val = ctor(diff[key])
+        except ValueError:
+          raise ProtocolError(reason='Invalid type for field %s, expected %s got "%s"' % (key, str(ctor), diff[key]))
+        else:
+          setattr(self, key, val)
 
   def serialize(self):
     return { 'x'     : round(self.x, 5),
@@ -41,40 +71,47 @@ class ShipNode:
 class Ship:
   readable_attr = { 'x'             : limited_precision_float(5),
                     'y'             : limited_precision_float(5),
-                    'rotation'      : limited_precision_float(5),
+                    'direction'     : limited_precision_float(5),
                     'speed'         : limited_precision_float(5),
-                    'throttle_accel': limited_precision_float(5),
+                    'trajectory'    : limited_precision_float(5),
+                    'rotation'      : limited_precision_float(5),
+                    'throttle_speed': limited_precision_float(5),
                     'throttle_rot'  : limited_precision_float(5),
+                    'max_speed'     : limited_precision_float(5),
                     'max_accel'     : limited_precision_float(5),
-                    'max_speed_fwd' : limited_precision_float(5),
-                    'max_speed_bwd' : limited_precision_float(5),
-                    'max_drot'      : limited_precision_float(5)  }
+                    'max_rot'       : limited_precision_float(5),
+                    'max_rot_accel' : limited_precision_float(5)  }
 
   writable_attr = { 'x'             : float,
                     'y'             : float,
-                    'rotation'      : float,
+                    'direction'     : float,
                     'speed'         : float,
-                    'throttle_accel': float,
+                    'trajectory'    : float,
+                    'rotation'      : float,
+                    'throttle_speed': float,
                     'throttle_rot'  : float,
+                    'max_speed'     : float,
                     'max_accel'     : float,
-                    'max_speed_fwd' : float,
-                    'max_speed_bwd' : float,
-                    'max_drot'      : float  }
+                    'max_rot'       : float,
+                    'max_rot_accel' : float  }
 
   def __init__(self):
     self.id = get_id()
     self.x              =  0.0
     self.y              =  0.0
-    self.rotation       =  0.0
-    self.speed          =  0.0
+    self.direction      =  0.0
 
-    self.throttle_accel =  0.0
+    self.speed          =  0.0
+    self.trajectory     =  0.0
+    self.rotation       =  0.0
+
+    self.throttle_speed =  0.0
     self.throttle_rot   =  0.0
 
+    self.max_speed      = 10.0
     self.max_accel      =  0.2
-    self.max_speed_fwd  = 10.0
-    self.max_speed_bwd  = 10.0
-    self.max_drot       =  0.1
+    self.max_rot        =  0.1
+    self.max_rot_accel  =  0.01
 
     self.nodes   = []
     self.modules = {}
@@ -91,31 +128,57 @@ class Ship:
     self.modules[module.role].append(module)
 
   def calc_speed_vector(self):
-    dx = cos(self.rotation) * self.speed
-    dy = sin(self.rotation) * self.speed
+    dx = cos(self.trajectory) * self.speed
+    dy = sin(self.trajectory) * self.speed
     return (dx, dy)
 
-  def move(self, vector):
-    dx, dy = vector
-    self.x += dx
-    self.y += dy
+  def has_fmc(self):
+    if 'fmc' in self.modules:
+      for m in self.modules['fmc']:
+        if m.damage < 1:
+          return True
+    return False
 
-  def update_rotation(self):
-    self.rotation = fmod(self.rotation + self.throttle_rot * self.max_drot, 2*pi)
-    if self.rotation < 0.0:
-      self.rotation += 2*pi
+  def move(self, vector):
+    self.x += vector[0]
+    self.y += vector[1]
+
+  def update_direction(self):
+    if self.has_fmc():
+      target_rotation = self.max_rot * self.throttle_rot
+      diff = clamp(target_rotation - self.rotation, -self.max_rot_accel, self.max_rot_accel)
+      self.rotation += diff
+    else:
+      self.rotation += self.max_rot_accel * self.throttle_rot
+    self.rotation = clamp(self.rotation, -self.max_rot, self.max_rot)
+    self.direction += self.rotation
+    self.direction = fmod(self.direction, 2*pi)
+    if self.direction < 0.0:
+      self.direction += 2*pi
 
   def update_speed(self):
     engine_performance = 0.0
     if 'engine' in self.modules and len(self.modules['engine']) > 0:
       engine_performance = 1.0 - self.modules['engine'][0].damage
     max_accel = self.max_accel * engine_performance
-    target_speed = self.throttle_accel * (self.max_speed_fwd if self.throttle_accel >= 0.0 else self.max_speed_bwd)
-    dspeed = target_speed - self.speed
-    if dspeed >= 0.0:
-      self.speed += min(dspeed,  max_accel)
+
+    cur_vec  = to_vec(self.trajectory, self.speed)
+    if self.has_fmc():
+      target_speed = self.max_speed * self.throttle_speed
+      target_vec = to_vec(self.direction, target_speed)
+      diff_vec = sub_vec(target_vec, cur_vec)
+      l = hypot(*diff_vec)
+      if l > 0.0:
+        scale = clamp(l, 0, max_accel) / l
+      else:
+        scale = 0.0
+      diff_vec = mul_vec(diff_vec, scale)
     else:
-      self.speed += max(dspeed, -max_accel)
+      diff_vec = to_vec(self.direction,  max_accel * self.throttle_speed)
+
+    new_vec = add_vec(cur_vec, diff_vec)
+    self.trajectory = atan2(new_vec[1], new_vec[0])
+    self.speed = hypot(*new_vec)
 
   def update_modules(self):
     for modules in self.modules.values():
@@ -124,7 +187,7 @@ class Ship:
 
   def update(self):
     self.update_modules()
-    self.update_rotation()
+    self.update_direction()
     self.update_speed()
     self.move(self.calc_speed_vector())
 
@@ -140,10 +203,19 @@ class Ship:
           raise ProtocolError(reason='Invalid type for field %s, expected %s got "%s"' % (key, str(ctor), diff[key]))
         else:
           setattr(self, key, val)
+      elif key == 'nodes':
+        if type(diff[key]) != dict:
+          raise ProtocolError(reason='Node diffs should be objects')
+        for node_key, node_diff in diff[key].items():
+          node_idx = to_int(node_key, error='Node ids should be integers, not "%s"')
+          if node_idx >= len(self.nodes) or node_idx < 0:
+            raise ProtocolError(reason='Node index %d is not valid. Should be in [%d, %d)' %(node_idx, 0, len(self.nodes)))
+          self.nodes[node_idx].apply_diff(node_diff)
       else:
         raise ProtocolError(reason='Unknown key for ship: %s' % key)
+
     self.rotation       = clamp(self.rotation      ,  0.0, 2*pi)
-    self.throttle_accel = clamp(self.throttle_accel, -1.0,  1.0)
+    self.throttle_speed = clamp(self.throttle_speed, -1.0,  1.0)
     self.throttle_rot   = clamp(self.throttle_rot  , -1.0,  1.0)
 
   def serialize_modules(self):

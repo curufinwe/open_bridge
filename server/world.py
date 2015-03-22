@@ -1,7 +1,7 @@
 from math import *
 
 from ship import Ship
-from util import ProtocolError
+from util import to_int, ProtocolError
 
 def enforce_boundary(dist, obj):
   obj_dist = hypot(obj.x, obj.y)
@@ -18,7 +18,7 @@ def find_obj_by_id(lst, id):
 
 class World:
   def __init__(self):
-    self.sector_size = 300.0
+    self.sector_size = 900.0
     self.ships       = []
     self.bodies      = []
 
@@ -36,10 +36,7 @@ class World:
         raise ProtocolError(reason='Ship diffs should be an object')
 
       for key, val in diff['ships'].items():
-        try:
-          key = int(key)
-        except ValueError:
-          raise ProtocolError(reason='ship id is not an int but "%s"' % key)
+        key = to_int(key, error='ship id is not an int but "%s"' % key)
         idx = find_obj_by_id(self.ships, key)
         if idx is None:
           raise ProtocolError(reason='Invalid id for a ship: %d' % key)
