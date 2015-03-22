@@ -30,5 +30,4 @@ class Input
     raise "thats not a valid name #{name} for an input" unless name
     @config[name] = Native(`Phaser.Keyboard[keycode]`)
   end
-
 end

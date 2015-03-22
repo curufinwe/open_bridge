@@ -20,6 +20,7 @@ class State
     @last_proposed_state = @proposed_state.deep_copy
     @connection = connection
     @blocks = []
+    `document.gamestate = self`
   end
 
   def update
