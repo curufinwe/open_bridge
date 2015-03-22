@@ -1,10 +1,11 @@
 # ERB
 
 def get_url_params
-  return `window.location.search`.split("&").each.with_object({}) do |param,h|
+  params = `window.location.search`.gsub(/^\?/,"").split("&").each.with_object({}) do |param,h|
     key,val =*param.split("=")
     h[key] = val
   end
+  return params
 end
 
 game = nil

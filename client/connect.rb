@@ -8,6 +8,7 @@ class Connector
   attr_accessor :state
 
   def initialize(host)
+    log(host)
     @changes = []
     url = "ws://#{host}:9000"
     @ws = Native(`new WebSocket(url)`)
