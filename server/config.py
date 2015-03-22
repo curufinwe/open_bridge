@@ -15,8 +15,12 @@ def build_ship(smc, rmc):
   engine = ShipEngine()
   engine.addNode(nodes[0])
 
+  laser = ShipLaser()
+  laser.addNode(nodes[0])
+
   ship.addModule(bridge)
   ship.addModule(engine)
+  ship.addModule(laser)
 
   if smc:
     smc = ShipSMC()
