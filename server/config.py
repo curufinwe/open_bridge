@@ -2,7 +2,7 @@ import itertools as it
 
 from ship import *
 
-def build_ship(has_fmc):
+def build_ship(smc, rmc):
   ship = Ship()
 
   nodes = list(it.starmap(ShipNode, [(-20.0, 0.0), (0.0, 0.0), (20.0, 0.0)]))
@@ -18,13 +18,19 @@ def build_ship(has_fmc):
   ship.addModule(bridge)
   ship.addModule(engine)
 
-  if has_fmc:
-    fmc = ShipFMC()
-    fmc.addNode(nodes[2])
-    ship.addModule(fmc)
+  if smc:
+    smc = ShipSMC()
+    smc.addNode(nodes[2])
+    ship.addModule(smc)
+
+  if rmc:
+    rmc = ShipRMC()
+    rmc.addNode(nodes[2])
+    ship.addModule(rmc)
 
   return ship
 
 def init_game(game):
-  game.world.ships.append(build_ship(True))
-  game.world.ships.append(build_ship(False))
+  game.world.ships.append(build_ship(True, True))
+  game.world.ships.append(build_ship(False, True))
+  game.world.ships.append(build_ship(False, False))

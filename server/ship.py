@@ -32,8 +32,11 @@ class ShipEngine(ShipModule):
 class ShipBridge(ShipModule):
   role = 'bridge'
 
-class ShipFMC(ShipModule): # Flight Management Computer
-  role = 'fmc'
+class ShipSMC(ShipModule): # Speed Management Computer
+  role = 'smc'
+
+class ShipRMC(ShipModule): # Rotation Management Computer
+  role = 'rmc'
 
 class ShipNode:
   readable_attr = { 'x'     : limited_precision_float(5),
@@ -132,19 +135,20 @@ class Ship:
     dy = sin(self.trajectory) * self.speed
     return (dx, dy)
 
-  def has_fmc(self):
-    if 'fmc' in self.modules:
-      for m in self.modules['fmc']:
-        if m.damage < 1:
-          return True
-    return False
+  def avg_dmg(self, role):
+    if role in self.modules:
+      s = 0.0
+      for m in self.modules[role]:
+        s += m.damage
+      return s / len(self.modules[role])
+    return 1.0
 
   def move(self, vector):
     self.x += vector[0]
     self.y += vector[1]
 
   def update_direction(self):
-    if self.has_fmc():
+    if self.avg_dmg('rmc') < 1.0:
       target_rotation = self.max_rot * self.throttle_rot
       diff = clamp(target_rotation - self.rotation, -self.max_rot_accel, self.max_rot_accel)
       self.rotation += diff
@@ -157,13 +161,11 @@ class Ship:
       self.direction += 2*pi
 
   def update_speed(self):
-    engine_performance = 0.0
-    if 'engine' in self.modules and len(self.modules['engine']) > 0:
-      engine_performance = 1.0 - self.modules['engine'][0].damage
+    engine_performance = 1.0 - self.avg_dmg('engine')
     max_accel = self.max_accel * engine_performance
 
     cur_vec  = to_vec(self.trajectory, self.speed)
-    if self.has_fmc():
+    if self.avg_dmg('smc') < 1.0:
       target_speed = self.max_speed * self.throttle_speed
       target_vec = to_vec(self.direction, target_speed)
       diff_vec = sub_vec(target_vec, cur_vec)
@@ -214,7 +216,7 @@ class Ship:
       else:
         raise ProtocolError(reason='Unknown key for ship: %s' % key)
 
-    self.rotation       = clamp(self.rotation      ,  0.0, 2*pi)
+    self.direction      = clamp(self.direction     ,  0.0, 2*pi)
     self.throttle_speed = clamp(self.throttle_speed, -1.0,  1.0)
     self.throttle_rot   = clamp(self.throttle_rot  , -1.0,  1.0)
 
