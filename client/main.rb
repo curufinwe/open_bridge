@@ -8,93 +8,56 @@ def get_url_params
 end
 
 game = nil
+gui = nil
+state = nil
+connect = nil
+input = nil
+ships = {}
 
-h = nil
+shipinfo = { "sprite" => "ship", "x" => 30, "y" => 30, "dx" => 0, "dy" => 0 }
 
 preload = lambda{
   game.load.image("bg","assets/iris.png")
   game.load.image("planet","assets/planet.png")
   game.load.image("ship","assets/cruiser.png")
-  h.preload
-}
-
-on_press= lambda{|event|
-  `console.log(event)`
+  gui.preload
 }
 
 create = lambda{
-      h.create
-      $game = game
       game.world.setBounds(-500,-500,1000,1000)
       game.add.sprite(-500, -500, 'bg');
-      on_down = nil
-      on_up = nil
-      $cursors = game[:input][:keyboard].createCursorKeys()
-      game.input.keyboard.addCallbacks(nil, on_down, on_press, on_up);
+      input = Input.new(game)
+      input.key("ship1","ONE")
+      input.key("ship2","TWO")
+      input.key("turn_left","LEFT")
+      input.key("turn_right","RIGHT")
+      input.key("accelerate","UP")
+      input.key("decelerate","DOWN")
       `game.native.physics.startSystem(Phaser.Physics.ARCADE)`
-      game = $game
-      c = Connector.new(get_url_params["host"] || "127.0.0.1")
-      s = State.new(c)
-      $s = s
-      c.state = s
+      connect = Connector.new(get_url_params["host"] || "127.0.0.1")
+      state = State.new(connect)
+      connect.state = state
+      gui.create(input)
 }
 
 render = lambda{
-  $game.debug.cameraInfo($game.camera, 32, 32);
+  game.debug.cameraInfo(game.camera, 32, 32);
 }
 
-ships = {}
-shipinfo = { "sprite" => "ship", "x" => 30, "y" => 30, "dx" => 0, "dy" => 0 }
+update = lambda do
 
-pressed_ro =false;
-pressed_ac =false;
-cam_setup = false
+  gui.ship ||= ships["1"] if ships["1"]
+  input.on("ship1"){ gui.ship = ships["1"] }
+  input.on("ship2"){ gui.ship = ships["2"] }
 
-update = lambda{
-
-  h.update
-
-  $s.get(%w{world ships}).each_key do |id|
-    ships[id] ||= Body.new(game,$s,id,shipinfo)
-    ship = ships[id]
-    path = %w{world ships}+[id]
-    ship.sprite[:x] = ship.prop :x
-    ship.sprite[:y] = ship.prop :y
-    ship.sprite[:rotation] = ship.prop :rotation
-    ship.sprite[:body][:velocity][:x] = ship.prop :dx
-    ship.sprite[:body][:velocity][:y] = ship.prop :dy
+  state.get(%w{world ships}).each_key do |id|
+    ships[id] ||= Ship.new(game, state, id, shipinfo)
+    ships[id].update
   end
-  
-  if ships["1"] 
-    ship = ships["1"]
-    game.camera.view.x = ship.sprite.x-400
-    game.camera.view.y = ship.sprite.y-300
-    if $cursors[:right][:isDown]
-      pressed_ro = true
-      ship.set_prop :throttle_rot,1
-    elsif $cursors[:left][:isDown]
-      pressed_ro = true
-      ship.set_prop :throttle_rot,-1
-    elsif pressed_ro
-      pressed_ro = false
-      ship.set_prop :throttle_rot,0
-    end
 
-    if $cursors[:up][:isDown]
-      pressed_ac = true
-      ship.set_prop :throttle_accel,1
-    elsif $cursors[:down][:isDown]
-      pressed_ac = true
-      ship.set_prop :throttle_accel,-1
-    elsif pressed_ac
-      pressed_ac = false
-      ship.set_prop :throttle_accel,0
-    end
-  end
-  $s.update
-  nil
-}
+  gui.update
+  state.update
+end
 
 game = Native(`new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render})`)
-
-h = HelmInterface.new(game)
+gui = HelmInterface.new(game)

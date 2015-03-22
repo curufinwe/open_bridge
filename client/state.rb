@@ -28,23 +28,15 @@ class State
     @last_proposed_state = @proposed_state
     @proposed_state = @proposed_state.deep_copy
     @connection.send_changes(changes)
-    puts "update"
-    puts @proposed.inspect
   end
 
   def apply(patch)
     changes, changed = @last_proposed_state.diff(@proposed_state)
     @connection.send_changes(changes) if changed
-    puts "patch"
-    puts patch.inspect
-    puts "apply (before)"
-    puts @proposed_state.inspect
     @proposed_state.apply(patch)
     @authoritive_state = @proposed_state.deep_copy
     @last_proposed_state = @proposed_state
     @proposed_state = @proposed_state.deep_copy
-    puts "apply (after)"
-    puts @proposed_state.inspect
     @blocks.each(&:call)
   end
 

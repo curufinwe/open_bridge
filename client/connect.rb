@@ -27,7 +27,6 @@ class Connector
       @changes << changes
       return
     end
-    log(JSON.dump(changes))
     @ws.send(JSON.dump(changes))
   end
 

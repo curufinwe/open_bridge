@@ -7,18 +7,32 @@ class Body
     @state = state
     @sprite = game.add.sprite(info["x"],info["y"],info["sprite"])
     @sprite.anchor.setTo(0.5,0.5)
-    @state_path = ["world","ships",@id]
+    @state_path = ["world","bodies",@id]
     game.physics.arcade.enable(@sprite)
   end
 
-
-  def prop(*names)
+  def state(*names)
     res = names.map{|n| @state.get(@state_path+[n])}
     res = res[0] if names.length == 1
     return res
   end
 
-  def set_prop(name,val)
+  def set_state(name,val)
     @state.set(@state_path+[name], val)
+  end
+end
+
+class Ship < Body
+  def initialize(game,state,id,info)
+    super
+    @state_path = ["world","ships",@id]
+  end
+
+  def update
+    @sprite[:x] = state :x
+    @sprite[:y] = state :y
+    @sprite[:rotation] = state :rotation
+    @sprite[:body][:velocity][:x] = state :dx
+    @sprite[:body][:velocity][:y] = state :dy
   end
 end
