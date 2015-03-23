@@ -36,6 +36,7 @@ class State
     changes, changed = @last_proposed_state.diff(@proposed_state)
     @connection.send_changes(changes) if changed
     @proposed_state.apply(patch)
+    @proposed_state.delete_nils!
     @authoritive_state = @proposed_state.deep_copy
     @last_proposed_state = @proposed_state
     puts @authoritive_state.inspect if $DEBUG
@@ -80,7 +81,8 @@ class Hash
     return [nil, true] unless new_hash
 
     self.each_key do |key|
-      newval, changed = self[key].diff(new_hash[key])
+      #if new_hash[key] == nil then all recusrive calls will return nil, true
+      newval, changed = self[key].diff(new_hash[key]) 
       res[key] = newval if changed
     end
 
@@ -97,9 +99,17 @@ class Hash
       else
         self[key] = patch[key]
       end
-      self.delete(key) if self[key] == nil
     end
     return self
+  end
+
+  def delete_nils!
+    self.each_key do |key|
+      case self[key]
+        when nil then self.delete(key)
+        when Hash then self[key].delete_nils!
+      end
+    end
   end
 
   def deep_copy
