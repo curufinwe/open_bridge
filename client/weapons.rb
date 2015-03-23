@@ -11,19 +11,19 @@ class WeaponsInterface
   end
 
   def enable_clicks_for_targets!
-    @state.ids_to_ships.each_pair do |id,ship|
-      ship.sprite.inputEnabled = true
-      if !ship.sprite.pixelPerfectClick
-        ship.sprite.pixelPerfectClick = true
-        ship.sprite.events.onInputDown.add {
-          self.clicked_obj(ship)
+    @state.ids_to_ships.each_pair do |id,other_ship|
+      other_ship.sprite.inputEnabled = true
+      if !other_ship.sprite.pixelPerfectClick
+        other_ship.sprite.pixelPerfectClick = true
+        other_ship.sprite.events.onInputDown.add {
+          self.clicked_obj(other_ship)
         }
       end
     end
   end
 
-  def clicked_obj(ship)
-    @selected_ship = ship
+  def clicked_obj(selected_ship)
+    set_target(selected_ship)
   end
 
   def update
@@ -48,6 +48,11 @@ class WeaponsInterface
     else
       @weapons_selected.visible = false
     end
+  end
+
+  def set_target(selected_ship)
+    @selected_ship = selected_ship
+    ship.set_state(["modules","weapon","0","target"],selected_ship.id)
   end
 
   def create(input,state)
