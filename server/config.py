@@ -35,6 +35,8 @@ def build_ship(smc, rmc):
   return ship
 
 def init_game(game):
-  game.world.ships.append(build_ship(True, True))
-  game.world.ships.append(build_ship(False, True))
-  game.world.ships.append(build_ship(False, False))
+  game.world.addShip(build_ship(True, True))
+  game.world.addShip(build_ship(False, True))
+  game.world.addShip(build_ship(False, False))
+  game.world.ships[1].x += 60
+  game.world.ships[2].x -= 60

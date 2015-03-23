@@ -22,6 +22,16 @@ class World:
     self.ships       = []
     self.bodies      = []
 
+  def addShip(self, ship):
+    self.ships.append(ship)
+    ship.world = self
+
+  def getShipById(self, id):
+    for s in self.ships:
+      if s.id == id:
+        return s
+    return None
+
   def update(self):
     for s in self.ships:
       s.update()
