@@ -1,6 +1,7 @@
 class Body
 
   attr_accessor :sprite, :state_path
+  attr_reader :id
 
   def initialize(game,state,id,info)
     @id = id
@@ -17,8 +18,8 @@ class Body
     return res
   end
 
-  def set_state(name,val)
-    @state.set(@state_path+[name], val)
+  def set_state( path, newval )
+    @state.set(@state_path+[*path], newval)
   end
 end
 
