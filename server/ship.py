@@ -5,6 +5,30 @@ from vector import *
 
 clamp = lambda val, low, high: max(low, min(high, val))
 
+class Serializable():
+  readable_attr = {}
+  writable_attr = {}
+
+  def apply_diff(self, diff):
+    keys_to_del = []
+    if type(diff) != dict:
+      raise ProtocolError(reason='%s diffs should be objects' % self.__class__.__name__)
+    for key in diff:
+      if key in self.writable_attr:
+        keys_to_del.append(key)
+        ctor = self.writable_attr[key]
+        try:
+          val = ctor(diff[key])
+        except ValueError:
+          raise ProtocolError(reason='Invalid type for field %s, expected %s got "%s"' % (key, str(ctor), diff[key]))
+        else:
+          setattr(self, key, val)
+    for key in keys_to_del:
+      del diff[key]
+
+  def serialize(self):
+    return dict((a, ctor(getattr(self, a))) for a, ctor in self.readable_attr.items())
+
 class ShipModule:
   def __init__(self):
     self.nodes  = []
@@ -38,7 +62,49 @@ class ShipSMC(ShipModule): # Speed Management Computer
 class ShipRMC(ShipModule): # Rotation Management Computer
   role = 'rmc'
 
-class ShipNode:
+class ShipLaser(ShipModule, Serializable):
+  role = 'weapon'
+
+  readable_attr = { 'power'      : limited_precision_float(5),
+                    'min_range'  : limited_precision_float(5),
+                    'max_range'  : limited_precision_float(5),
+                    'energy'     : int,
+                    'max_energy' : int,
+                    'reload_time': int,
+                  }
+
+  writable_attr = { 'power'      : float,
+                    'min_range'  : float,
+                    'max_range'  : float,
+                    'energy'     : int,
+                    'max_energy' : int,
+                    'reload_rate': int,
+                  }
+
+  def __init__(self):
+    ShipModule.__init__(self)
+    Serializable.__init__(self)
+    self.power       = 20.0
+    self.min_range   = 10.0
+    self.max_range   = 100.0
+    self.energy      = 0
+    self.max_energy  = 100
+    self.reload_rate = 5
+
+  def update(self):
+    self.energy = clamp(self.energy + self.reload_rate, 0, self.max_energy)
+
+  def apply_diff(self, diff):
+    Serializable.apply_diff(diff)
+    ShipModule.apply_diff(diff)
+
+  def serialize(self):
+    result = ShipModule.serialize(self)
+    tmp = Serializable.serialize(self)
+    result.update(tmp)
+    return result
+
+class ShipNode(Serializable):
   readable_attr = { 'x'     : limited_precision_float(5),
                     'y'     : limited_precision_float(5),
                     'damage': limited_precision_float(5)  }
@@ -54,24 +120,12 @@ class ShipNode:
     self.damage = 0.0
 
   def apply_diff(self, diff):
-    if type(diff) != dict:
-      raise ProtocolError(reason='Node diffs should be objects')
-    for key in diff:
-      if key in self.writable_attr:
-        ctor = self.writable_attr[key]
-        try:
-          val = ctor(diff[key])
-        except ValueError:
-          raise ProtocolError(reason='Invalid type for field %s, expected %s got "%s"' % (key, str(ctor), diff[key]))
-        else:
-          setattr(self, key, val)
+    super().apply_diff(diff)
 
   def serialize(self):
-    return { 'x'     : round(self.x, 5),
-             'y'     : round(self.y, 5),
-             'damage': round(self.damage, 5) }
+    return super().serialize()
 
-class Ship:
+class Ship(Serializable):
   readable_attr = { 'x'             : limited_precision_float(5),
                     'y'             : limited_precision_float(5),
                     'direction'     : limited_precision_float(5),
@@ -194,18 +248,9 @@ class Ship:
     self.move(self.calc_speed_vector())
 
   def apply_diff(self, diff):
-    if type(diff) != dict:
-      raise ProtocolError(reason='Ship diffs should be objects')
+    super().apply_diff(diff)
     for key in diff:
-      if key in self.writable_attr:
-        ctor = self.writable_attr[key]
-        try:
-          val = ctor(diff[key])
-        except ValueError:
-          raise ProtocolError(reason='Invalid type for field %s, expected %s got "%s"' % (key, str(ctor), diff[key]))
-        else:
-          setattr(self, key, val)
-      elif key == 'nodes':
+      if key == 'nodes':
         if type(diff[key]) != dict:
           raise ProtocolError(reason='Node diffs should be objects')
         for node_key, node_diff in diff[key].items():
@@ -230,8 +275,8 @@ class Ship:
     return dict((idx, node.serialize()) for idx, node in enumerate(self.nodes))
 
   def serialize(self):
+    result = super().serialize()
     dx, dy = self.calc_speed_vector()
-    result = dict((a, ctor(getattr(self, a))) for a, ctor in self.readable_attr.items())
     result['modules'] = self.serialize_modules()
     result['nodes']   = self.serialize_nodes()
     result['dx']      = round(dx, 5)
