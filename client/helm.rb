@@ -67,8 +67,9 @@ class HelmInterface
     return @keyboard_throttle_rot, @keyboard_throttle_speed
   end
 
-  def create(input)
+  def create(input, state)
     @input = input
+    @state = state
     @input.on("turn_left"){ |mode,_| if mode == :up then @keyboard_throttle_rot = 0 else @keyboard_throttle_rot = -1 end }
     @input.on("turn_right"){|mode,_| if mode == :up then @keyboard_throttle_rot = 0 else @keyboard_throttle_rot = 1 end }
     @input.on("accelerate"){|mode,_| if mode == :up then @keyboard_throttle_speed = 0 else @keyboard_throttle_speed = 1 end }

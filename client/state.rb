@@ -14,11 +14,12 @@ class State
     @proposed_state
   end
 
-  def initialize(connection)
+  def initialize(game,connection)
+    @game = game
+    @connection = connection
     @authoritive_state = initial_state
     @proposed_state = @authoritive_state.deep_copy
     @last_proposed_state = @proposed_state.deep_copy
-    @connection = connection
     @blocks = []
     `document.gamestate = self`
   end

@@ -16,9 +16,6 @@ gui = nil
 state = nil
 connect = nil
 input = nil
-ships = {}
-
-shipinfo = { "sprite" => "ship", "x" => 30, "y" => 30, "dx" => 0, "dy" => 0 }
 
 preload = lambda{
   game.load.image("bg","assets/iris.png")
@@ -40,9 +37,9 @@ create = lambda{
       input.key("decelerate","DOWN")
       `game.native.physics.startSystem(Phaser.Physics.ARCADE)`
       connect = Connector.new(get_url_params["host"] || "127.0.0.1")
-      state = State.new(connect)
+      state = AnotatedState.new(game,connect)
       connect.state = state
-      gui.create(input)
+      gui.create(input, state)
 }
 
 render = lambda{
@@ -51,19 +48,20 @@ render = lambda{
 
 update = lambda do
 
-  gui.ship ||= ships["1"] if ships["1"]
-  input.on("ship1"){ gui.ship = ships["1"] }
-  input.on("ship2"){ gui.ship = ships["2"] }
-  input.on("ship3"){ gui.ship = ships["3"] }
+  gui.ship ||= state.ids_to_ships["1"] if state.ids_to_ships["1"]
+  input.on("ship1"){ gui.ship = state.ids_to_ships["1"] }
+  input.on("ship2"){ gui.ship = state.ids_to_ships["2"] }
+  input.on("ship3"){ gui.ship = state.ids_to_ships["3"] }
 
-  state.get(%w{world ships}).each_key do |id|
-    ships[id] ||= Ship.new(game, state, id, shipinfo)
-    ships[id].update
-  end
-
+  state.update_objects!
   gui.update
   state.update
 end
 
 game = Native(`new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render})`)
-gui = HelmInterface.new(game)
+
+case get_url_params["station"].downcase
+  when "helm" then gui = HelmInterface.new(game)
+  when "weapons" then gui = WeaponsInterface.new(game)
+  else gui = HelmInterface.new(game)
+end
