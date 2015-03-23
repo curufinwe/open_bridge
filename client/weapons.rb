@@ -33,6 +33,9 @@ class WeaponsInterface
     @game.camera.view.x = ship.sprite.x-400
     @game.camera.view.y = ship.sprite.y-300
     @game.camera[:bounds]=`null`
+    @weapons_cone.pos =[ship.sprite.x, ship.sprite.y]
+    @weapons_cone.dir = @ship.state :direction
+    @weapons_cone.update
 
     mx,my = @game.input.activePointer.worldX, @game.input.activePointer.worldY
     @weapons_target.x=mx
@@ -54,6 +57,7 @@ class WeaponsInterface
     @weapons_target.anchor.setTo(0.5,0.5)
     @weapons_selected = @game.add.sprite(0,0,"weapons_selected")
     @weapons_selected.anchor.setTo(0.5,0.5)
+    @weapons_cone = Cone.new(@game)
   end
 
 end

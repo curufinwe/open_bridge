@@ -14,20 +14,73 @@
    id="svg3267"
    version="1.1"
    inkscape:version="0.48.4 r9939"
-   sodipodi:docname="New document 12">
+   sodipodi:docname="helm.svg"
+   inkscape:export-filename="/home/me/proggen/web/open_bridge/client/assets/helm_nav.png"
+   inkscape:export-xdpi="89.982788"
+   inkscape:export-ydpi="89.982788">
   <defs
-     id="defs3269" />
+     id="defs3269">
+    <marker
+       inkscape:stockid="DiamondS"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="DiamondS"
+       style="overflow:visible">
+      <path
+         id="path4302"
+         d="M 0,-7.0710768 L -7.0710894,0 L 0,7.0710589 L 7.0710462,0 L 0,-7.0710768 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt"
+         transform="scale(0.2)" />
+    </marker>
+    <marker
+       inkscape:stockid="Tail"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Tail"
+       style="overflow:visible">
+      <g
+         id="g4253"
+         transform="scale(-1.2)">
+        <path
+           id="path4255"
+           d="M -3.8048674,-3.9585227 L 0.54352094,0"
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.8;stroke-linecap:round" />
+        <path
+           id="path4257"
+           d="M -1.2866832,-3.9585227 L 3.0617053,0"
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.8;stroke-linecap:round" />
+        <path
+           id="path4259"
+           d="M 1.3053582,-3.9585227 L 5.6537466,0"
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.8;stroke-linecap:round" />
+        <path
+           id="path4261"
+           d="M -3.8048674,4.1775838 L 0.54352094,0.21974226"
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.8;stroke-linecap:round" />
+        <path
+           id="path4263"
+           d="M -1.2866832,4.1775838 L 3.0617053,0.21974226"
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.8;stroke-linecap:round" />
+        <path
+           id="path4265"
+           d="M 1.3053582,4.1775838 L 5.6537466,0.21974226"
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.8;stroke-linecap:round" />
+      </g>
+    </marker>
+  </defs>
   <sodipodi:namedview
      id="base"
-     pagecolor="#2f2f2f"
+     pagecolor="#ffffff"
      bordercolor="#666666"
      borderopacity="1.0"
-     inkscape:pageopacity="1"
+     inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.2"
-     inkscape:cx="280.59166"
-     inkscape:cy="271.77615"
-     inkscape:current-layer="layer1"
+     inkscape:zoom="3.3941125"
+     inkscape:cx="174.87822"
+     inkscape:cy="357.33677"
+     inkscape:current-layer="layer3"
      inkscape:document-units="px"
      showgrid="false"
      inkscape:window-width="1918"
@@ -48,8 +101,21 @@
     </rdf:RDF>
   </metadata>
   <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="__bg_"
+     style="display:none">
+    <rect
+       style="fill:#2f2f2f;fill-opacity:1;stroke:none"
+       id="rect4133"
+       width="799.66675"
+       height="599.68561"
+       x="0.26013294"
+       y="0.26013246" />
+  </g>
+  <g
      id="layer1"
-     inkscape:label="Layer 1"
+     inkscape:label="helm_nav"
      inkscape:groupmode="layer">
     <path
        sodipodi:type="arc"
@@ -60,11 +126,17 @@
        sodipodi:rx="213.75"
        sodipodi:ry="199.16667"
        d="m 696.66666,324.16666 a 213.75,199.16667 0 1 1 -427.5,0 213.75,199.16667 0 1 1 427.5,0 z"
-       transform="matrix(0.93341057,0,0,1.0017565,-50.759512,-24.736053)" />
+       transform="matrix(0.93341057,0,0,1.0017565,-50.759512,-24.736053)"
+       inkscape:export-filename="/home/me/proggen/web/open_bridge/client/assets/helm_nav.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
     <path
        style="opacity:0.14953271;fill:#51b4ea;fill-opacity:1;stroke:none"
        d="M 400 100.46875 C 289.81007 100.46875 200.46875 189.81008 200.46875 300 C 200.46875 410.18992 289.81007 499.53125 400 499.53125 L 400 350 C 372.38576 350 350 327.61424 350 300 C 350 272.38576 372.38576 250 400 250 L 400 100.46875 z "
-       id="path3280-9" />
+       id="path3280-9"
+       inkscape:export-filename="/home/me/proggen/web/open_bridge/client/assets/helm_nav.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
     <path
        sodipodi:type="arc"
        style="opacity:1;fill:none;fill-opacity:1;stroke:#51b4ea;stroke-opacity:1;stroke-width:0.64031243;stroke-miterlimit:4;stroke-dasharray:none"
@@ -74,18 +146,86 @@
        sodipodi:rx="36.239223"
        sodipodi:ry="28.284271"
        d="m 488.49295,306.55069 a 36.239223,28.284271 0 1 1 -72.47845,0 36.239223,28.284271 0 1 1 72.47845,0 z"
-       transform="matrix(1.3797205,0,0,1.767767,-223.98373,-241.91019)" />
+       transform="matrix(1.3797205,0,0,1.767767,-223.98373,-241.91019)"
+       inkscape:export-filename="/home/me/proggen/web/open_bridge/client/assets/helm_nav.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
     <path
        style="fill:none;stroke:#51b4ea;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="m 350,300 -149.375,0"
        id="path4093"
        inkscape:connector-curvature="0"
-       sodipodi:nodetypes="cc" />
+       sodipodi:nodetypes="cc"
+       inkscape:export-filename="/home/me/proggen/web/open_bridge/client/assets/helm_nav.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
     <path
        style="fill:none;stroke:#51b4ea;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="m 599.41966,300 -149.375,0"
        id="path4093-9"
        inkscape:connector-curvature="0"
-       sodipodi:nodetypes="cc" />
+       sodipodi:nodetypes="cc"
+       inkscape:export-filename="/home/me/proggen/web/open_bridge/client/assets/helm_nav.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
+    <path
+       sodipodi:type="arc"
+       style="fill:none;stroke:#51b4ea;stroke-width:3.07959747;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="path4071-1-2"
+       sodipodi:cx="452.25372"
+       sodipodi:cy="306.55069"
+       sodipodi:rx="36.239223"
+       sodipodi:ry="28.284271"
+       d="m 488.49295,306.55069 a 36.239223,28.284271 0 1 1 -72.47845,0 36.239223,28.284271 0 1 1 72.47845,0 z"
+       transform="matrix(0.28687261,0,0,0.36755555,62.842011,49.51003)"
+       inkscape:export-filename="/home/me/proggen/web/open_bridge/client/assets/helm_target.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer3"
+     inkscape:label="weapons"
+     style="display:inline">
+    <g
+       id="g4199"
+       transform="matrix(1.8787967,0,0,1.8787967,-204.87268,-75.798688)"
+       inkscape:export-filename="/home/me/proggen/web/open_bridge/client/assets/weapons_selected.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90">
+      <path
+         sodipodi:nodetypes="cccc"
+         inkscape:connector-curvature="0"
+         id="path4179"
+         d="m 187.43324,151.94612 -5.24806,0 0,20.47663 4.91661,0"
+         style="fill:none;stroke:#d40000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:8, 2, 1, 2;stroke-dashoffset:1.5" />
+      <path
+         sodipodi:nodetypes="cccc"
+         inkscape:connector-curvature="0"
+         id="path4179-7"
+         d="m 197.7292,151.94612 5.24806,0 0,20.47663 -4.91661,0"
+         style="fill:none;stroke:#d40000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:8, 2, 1, 2;stroke-dashoffset:1.4;marker-start:none" />
+    </g>
+    <g
+       id="g4206">
+      <path
+         inkscape:export-ydpi="90"
+         inkscape:export-xdpi="90"
+         inkscape:export-filename="/home/me/proggen/web/open_bridge/client/assets/weapons_target.png"
+         sodipodi:nodetypes="cc"
+         inkscape:connector-curvature="0"
+         id="path4153"
+         d="m 162.55768,189.43788 20.88175,0"
+         style="fill:#d40000;stroke:#d40000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+      <path
+         inkscape:export-ydpi="90"
+         inkscape:export-xdpi="90"
+         inkscape:export-filename="/home/me/proggen/web/open_bridge/client/assets/weapons_target.png"
+         sodipodi:nodetypes="cc"
+         inkscape:connector-curvature="0"
+         id="path4153-2"
+         d="m 172.99855,178.99701 0,20.88175"
+         style="fill:#d40000;stroke:#d40000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+    </g>
   </g>
 </svg>

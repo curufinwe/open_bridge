@@ -23,6 +23,7 @@ module Math
     return `Math.cos(x)`
   end
 
+  # in radians
   def self.dir(angle, len = 1)
     x = cos(angle)*len
     y = sin(angle)*len
