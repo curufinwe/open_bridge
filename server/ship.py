@@ -68,28 +68,28 @@ class ShipLaser(ShipModule, Serializable):
   readable_attr = { 'power'      : limited_precision_float(5),
                     'min_range'  : limited_precision_float(5),
                     'max_range'  : limited_precision_float(5),
-                    'energy'     : int,
-                    'max_energy' : int,
-                    'reload_time': int,
+                    'energy'     : limited_precision_float(5),
+                    'max_energy' : limited_precision_float(5),
+                    'reload_rate': limited_precision_float(5),
                   }
 
   writable_attr = { 'power'      : float,
                     'min_range'  : float,
                     'max_range'  : float,
-                    'energy'     : int,
-                    'max_energy' : int,
-                    'reload_rate': int,
+                    'energy'     : float,
+                    'max_energy' : float,
+                    'reload_rate': float,
                   }
 
   def __init__(self):
     ShipModule.__init__(self)
     Serializable.__init__(self)
-    self.power       = 20.0
-    self.min_range   = 10.0
+    self.power       =  20.0
+    self.min_range   =  10.0
     self.max_range   = 100.0
-    self.energy      = 0
-    self.max_energy  = 100
-    self.reload_rate = 5
+    self.energy      =   0.0
+    self.max_energy  = 100.0
+    self.reload_rate =   5.0
 
   def update(self):
     self.energy = clamp(self.energy + self.reload_rate, 0, self.max_energy)
