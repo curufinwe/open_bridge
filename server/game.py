@@ -74,7 +74,7 @@ class Game:
       diff = calc_diff(client.last_state, new_state)
       msg = json.dumps(diff)
       if self.debug and len(diff) > 0:
-        print('[%s] To   : %s' % (timestamp(), msg))
+        print('[%s] To  : %s' % (timestamp(), msg))
       client.sendMessage(msg.encode('utf-8'))
       client.last_state = new_state
     if len(self.events) > 0:

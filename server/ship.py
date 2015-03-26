@@ -133,6 +133,8 @@ class ShipLaser(ShipModule):
       r = hypot(diff_x, diff_y)
       if self.min_range <= r <= self.max_range:
         target_dir = atan2(diff_y, diff_x)
+        if target_dir < 0.0:
+          target_dir += 2*pi
         weapon_dir = fmod(self._ship.direction + self.direction, 2*pi)
         diff_dir = target_dir - weapon_dir
         if diff_dir > pi:
