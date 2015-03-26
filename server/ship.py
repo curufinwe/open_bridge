@@ -142,6 +142,7 @@ class ShipLaser(ShipModule, Serializable):
       r = hypot(self.target.x - self.ship.x, self.target.y - self.ship.y)
       dmg = self.power if self.min_range <= r <= self.max_range else 0.0
       self.target.do_dmg(dmg)
+      self.energy = 0.0
 
   def apply_diff(self, diff):
     Serializable.apply_diff(self, diff)
