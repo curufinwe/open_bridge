@@ -1,7 +1,7 @@
 from math import *
 
+from protocol import to_int, ProtocolError
 from ship import Ship
-from util import to_int, ProtocolError
 
 def enforce_boundary(dist, obj):
   obj_dist = hypot(obj.x, obj.y)
@@ -17,20 +17,24 @@ def find_obj_by_id(lst, id):
  return None
 
 class World:
-  def __init__(self):
+  def __init__(self, game):
+    self.game = game
     self.sector_size = 900.0
     self.ships       = []
     self.bodies      = []
 
   def addShip(self, ship):
+    ship._world = self
     self.ships.append(ship)
-    ship.world = self
 
   def getShipById(self, id):
     for s in self.ships:
       if s.id == id:
         return s
     return None
+
+  def handle_event(self, evt):
+    self.game.handle_event(evt)
 
   def update(self):
     for s in self.ships:

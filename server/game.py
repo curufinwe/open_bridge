@@ -5,8 +5,7 @@ import time
 
 from autobahn.asyncio.websocket import WebSocketServerProtocol
 
-from diff import calc_diff
-from util import ProtocolError
+from protocol import ProtocolError, calc_diff
 from world import World
 
 def timestamp():
@@ -51,8 +50,9 @@ class GameClient(WebSocketServerProtocol):
 
 class Game:
   def __init__(self):
-    self.world = World()
+    self.world = World(self)
     self.clients = []
+    self.events = []
     self.debug = True
     self.ticks_per_second = 20.0
 
@@ -60,18 +60,25 @@ class Game:
     loop = asyncio.get_event_loop()
     loop.call_soon(self.update)
 
+  def handle_event(self, evt):
+    self.events.append(evt)
+
   def update(self):
     start = time.clock()
 
     self.world.update()
     for client in self.clients:
-      new_state = { 'world': self.world.serialize(), 'client_events': {} }
+      new_state = { 'world': self.world.serialize(),
+                    'events': dict((idx, evt.serialize()) for idx, evt in enumerate(self.events))
+                  }
       diff = calc_diff(client.last_state, new_state)
       msg = json.dumps(diff)
       if self.debug and len(diff) > 0:
         print('[%s] To   : %s' % (timestamp(), msg))
       client.sendMessage(msg.encode('utf-8'))
       client.last_state = new_state
+    if len(self.events) > 0:
+      self.events = []
 
     end = time.clock()
 

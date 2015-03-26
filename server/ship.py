@@ -2,35 +2,12 @@ from enum import Enum
 from math import *
 import random
 
-from util import *
+from event import LaserFiredEvent, DamageReceivedEvent
+from protocol import *
+from util import get_id
 from vector import *
 
 clamp = lambda val, low, high: max(low, min(high, val))
-
-class Serializable():
-  writable_attr = {}
-
-  def apply_diff(self, diff):
-    keys_to_del = []
-    if type(diff) != dict:
-      raise ProtocolError(reason='%s diffs should be objects' % self.__class__.__name__)
-    for key in diff:
-      if key in self.writable_attr:
-        keys_to_del.append(key)
-        ctor = self.writable_attr[key]
-        try:
-          val = ctor(diff[key])
-        except ValueError:
-          raise ProtocolError(reason='Invalid type for field %s, expected %s got "%s"' % (key, str(ctor), diff[key]))
-        except KeyError:
-          raise ProtocolError(reason='Invalid key for field %s ("%s")' % (key, diff[key]))
-        else:
-          setattr(self, key, val)
-    for key in keys_to_del:
-      del diff[key]
-
-  def serialize(self):
-    return serialize_attr(self)
 
 class ShipNode(Serializable):
   readable_attr = { 'x'     : limited_precision_float('x'     , 5),
@@ -45,13 +22,18 @@ class ShipNode(Serializable):
 
   def __init__(self, x, y):
     self._index = -1 # index in the ship list containing this Node
+    self._ship   = None
+
     self.x      = x
     self.y      = y
     self.hp     = 100.0
     self.max_hp = 100.0
 
   def do_dmg(self, dmg):
+    self.old_hp = self.hp
     self.hp = clamp(self.hp - dmg, 0, self.max_hp)
+    effective_dmg = self.old_hp - self.hp
+    self._ship.handle_event(DamageReceivedEvent(self, effective_dmg))
 
   def apply_diff(self, diff):
     super().apply_diff(diff)
@@ -64,9 +46,11 @@ class ShipModule(Serializable):
                   }
 
   def __init__(self):
+    self._index = -1 # index in the ship list containing this Node
+    self._ship   = None
+
     self.nodes  = []
     self.damage = 0.0
-    self.ship   = None
 
   def addNode(self, node):
     assert isinstance(node, ShipNode)
@@ -138,17 +122,19 @@ class ShipLaser(ShipModule):
   def update(self):
     self.energy = clamp(self.energy + self.reload_rate, 0, self.max_energy)
     if self.energy == self.max_energy and self.state == ShipLaser.WeaponState.firing and self.target is not None:
-      r = hypot(self.target.x - self.ship.x, self.target.y - self.ship.y)
+      r = hypot(self.target.x - self._ship.x, self.target.y - self._ship.y)
       dmg = self.power if self.min_range <= r <= self.max_range else 0.0
       self.target.do_dmg(dmg)
       self.energy = 0.0
+      self.state = ShipLaser.WeaponState.idle
+      self._ship.handle_event(LaserFiredEvent(self._ship, self.target, self._index))
 
   def apply_diff(self, diff):
     Serializable.apply_diff(self, diff)
     ShipModule.apply_diff(self, diff)
     if 'target' in diff:
       ship_id = to_int(diff['target'], error='target is not an int')
-      self.target = self.ship.world.getShipById(ship_id)
+      self.target = self._ship._world.getShipById(ship_id)
 
 class Ship(Serializable):
   readable_attr = { 'x'             : limited_precision_float('x'             , 5),
@@ -182,6 +168,8 @@ class Ship(Serializable):
                     'max_rot_accel' : float  }
 
   def __init__(self):
+    self._world   = None
+
     self.id = get_id()
     self.x              =  0.0
     self.y              =  0.0
@@ -201,17 +189,19 @@ class Ship(Serializable):
 
     self.nodes   = []
     self.modules = {}
-    self.world   = None
 
   def addNode(self, node):
     assert isinstance(node, ShipNode)
     node._index = len(self.nodes)
+    node._ship  = self
     self.nodes.append(node)
 
   def addModule(self, module):
     assert isinstance(module, ShipModule)
     if module.role not in self.modules:
       self.modules[module.role] = []
+    module._index = len(self.modules[module.role])
+    module._ship  = self
     self.modules[module.role].append(module)
     module.ship = self
 
@@ -239,6 +229,9 @@ class Ship(Serializable):
   def move(self, vector):
     self.x += vector[0]
     self.y += vector[1]
+
+  def handle_event(self, evt):
+    self._world.handle_event(evt)
 
   def update_direction(self):
     if self.avg_dmg('rmc') < 1.0:
