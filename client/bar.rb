@@ -19,7 +19,6 @@ class Bar
 
   def update
     x,y = *@pos
-    puts [x,y]
     h = height * @percentage
     @graphics.clear
     @graphics.beginFill(@full_color)
@@ -33,7 +32,6 @@ class Bar
     @graphics.endFill()
     y += h
     h = height-h
-    puts [x,y]
     @graphics.beginFill(@empty_color)
     @graphics.fillAlpha = 0.5
     @graphics.lineStyle(1, 0xffff00, 0.2)
