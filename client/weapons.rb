@@ -26,8 +26,18 @@ class WeaponsInterface
     set_target(selected_ship)
   end
 
+  def create_beam(id)
+    Beam.new(@game, ship.pos, state.ids_to_ships[id].pos, 0xffff00)
+  end
+
   def update
     enable_clicks_for_targets!
+    @state.events.each do |evnt|
+      if evnt["type"] == "laser_fired"
+        id = evnt["target"]
+        create_beam(id)
+      end
+    end
 
     next unless ship
     @game.camera.view.x = ship.sprite.x-400
@@ -56,7 +66,6 @@ class WeaponsInterface
     @selected_ship = selected_ship
     ship.set_state(["modules","weapon","0","target"],selected_ship.id)
     ship.set_state(["modules","weapon","0","state"],"firing")
-    Beam.new(@game, ship.pos, selected_ship.pos, 0xffff00)
   end
 
   def create(input,state)

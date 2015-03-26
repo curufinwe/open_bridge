@@ -22,6 +22,7 @@ class State
     @proposed_state = @authoritive_state.deep_copy
     @last_proposed_state = @proposed_state.deep_copy
     @blocks = []
+    @events = []
     `document.gamestate = self`
   end
 
@@ -35,7 +36,7 @@ class State
 
   def extract_events!(patch)
     if patch.include? "events"
-      @events = patch["events"].values
+      @events = patch["events"].values.compact
       puts @events.inspect
       patch.delete("events")
     end
