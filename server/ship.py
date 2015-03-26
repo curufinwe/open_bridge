@@ -4,7 +4,7 @@ import random
 
 from event import LaserFiredEvent, DamageReceivedEvent
 from protocol import *
-from util import get_id
+from util import *
 from vector import *
 
 clamp = lambda val, low, high: max(low, min(high, val))
@@ -91,6 +91,8 @@ class ShipLaser(ShipModule):
   readable_attr = { 'power'      : limited_precision_float('power'      , 5),
                     'min_range'  : limited_precision_float('min_range'  , 5),
                     'max_range'  : limited_precision_float('max_range'  , 5),
+                    'direction'  : limited_precision_float('direction'  , 5),
+                    'firing_arc' : limited_precision_float('firing_arc' , 5),
                     'energy'     : limited_precision_float('energy'     , 5),
                     'max_energy' : limited_precision_float('max_energy' , 5),
                     'reload_rate': limited_precision_float('reload_rate', 5),
@@ -101,6 +103,8 @@ class ShipLaser(ShipModule):
   writable_attr = { 'power'      : float,
                     'min_range'  : float,
                     'max_range'  : float,
+                    'direction'  : float,
+                    'firing_arc' : float,
                     'energy'     : float,
                     'max_energy' : float,
                     'reload_rate': float,
@@ -112,7 +116,9 @@ class ShipLaser(ShipModule):
     Serializable.__init__(self)
     self.power       =  20.0
     self.min_range   =  10.0
-    self.max_range   = 100.0
+    self.max_range   = 200.0
+    self.direction   =   0.0
+    self.firing_arc  = deg2rad(50.)
     self.energy      =   0.0
     self.max_energy  = 100.0
     self.reload_rate =   5.0
@@ -122,12 +128,21 @@ class ShipLaser(ShipModule):
   def update(self):
     self.energy = clamp(self.energy + self.reload_rate, 0, self.max_energy)
     if self.energy == self.max_energy and self.state == ShipLaser.WeaponState.firing and self.target is not None:
-      r = hypot(self.target.x - self._ship.x, self.target.y - self._ship.y)
-      dmg = self.power if self.min_range <= r <= self.max_range else 0.0
-      self.target.do_dmg(dmg)
-      self.energy = 0.0
-      self.state = ShipLaser.WeaponState.idle
-      self._ship.handle_event(LaserFiredEvent(self._ship, self.target, self._index))
+      diff_x = self.target.x - self._ship.x
+      diff_y = self.target.y - self._ship.y
+      r = hypot(diff_x, diff_y)
+      if self.min_range <= r <= self.max_range:
+        target_dir = atan2(diff_y, diff_x)
+        weapon_dir = fmod(self._ship.direction + self.direction, 2*pi)
+        diff_dir = target_dir - weapon_dir
+        if diff_dir > pi:
+          diff_dir -= 2*pi
+        if abs(diff_dir) <= self.firing_arc * 0.5:
+          dmg = self.power
+          self.target.do_dmg(dmg)
+          self.energy = 0.0
+          self.state = ShipLaser.WeaponState.idle
+          self._ship.handle_event(LaserFiredEvent(self._ship, self.target, self._index))
 
   def apply_diff(self, diff):
     Serializable.apply_diff(self, diff)
