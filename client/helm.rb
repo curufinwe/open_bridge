@@ -25,12 +25,6 @@ class HelmInterface
 
     @game.camera.view.x = ship.sprite.x-400
     @game.camera.view.y = ship.sprite.y-300
-    @helm_nav.x = ship.sprite.x
-    @helm_nav.y = ship.sprite.y
-    @deg_indicators.each do |deg|
-      deg.text.x = ship.sprite.x + deg.x
-      deg.text.y = ship.sprite.y + deg.y
-    end
     @helm_nav[:rotation] = ship.sprite[:rotation]+`Math.PI`
     @game.camera[:bounds]=`null`
     
@@ -77,6 +71,8 @@ class HelmInterface
 
     @helm_nav = @game.add.sprite(0,0,"helm_nav")
     @helm_nav.anchor.setTo(0.5,0.5)
+    @helm_nav.fixedToCamera = true;
+    @helm_nav.cameraOffset.setTo(400, 300);
 
     @helm_target = @game.add.sprite(0,0,"helm_target")
     @helm_target.anchor.setTo(0.5,0.5)
@@ -88,6 +84,8 @@ class HelmInterface
       desc = Math.clamp_angle360(deg+90).to_s
       x,y = *Math.dir(deg*Math::DegToRad,220)
       text = @game.add.text(x,y+2.5, desc, Text::DefaultText);
+      text.fixedToCamera = true;
+      text.cameraOffset.setTo(400+x, 300+y);
       text.anchor.setTo(0.5,0.5)
       deg = DegInfo.new(x-5, y+5, text)
       @deg_indicators << deg
