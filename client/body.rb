@@ -13,8 +13,7 @@ class Body
   end
 
   def state(*names)
-    res = names.map{|n| @state.get(@state_path+[n])}
-    res = res[0] if names.length == 1
+    res = @state.get(@state_path+names)
     return res
   end
 
