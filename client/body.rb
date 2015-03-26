@@ -29,6 +29,10 @@ class Ship < Body
     @state_path = ["world","ships",@id]
   end
 
+  def pos
+    return [ state(:x), state(:y) ]
+  end
+
   def update
     @sprite[:x] = state :x
     @sprite[:y] = state :y

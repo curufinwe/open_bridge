@@ -53,6 +53,8 @@ class WeaponsInterface
   def set_target(selected_ship)
     @selected_ship = selected_ship
     ship.set_state(["modules","weapon","0","target"],selected_ship.id)
+    ship.set_state(["modules","weapon","0","state"],"firing")
+    Beam.new(@game, ship.pos, selected_ship.pos, 0xffff00)
   end
 
   def create(input,state)

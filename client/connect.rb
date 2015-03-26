@@ -1,8 +1,4 @@
 
-def log(x)
-  `console.log(x)`
-end
-
 class Connector
 
   attr_accessor :state
