@@ -5,8 +5,7 @@ import time
 
 from autobahn.asyncio.websocket import WebSocketServerProtocol
 
-from diff import calc_diff
-from util import ProtocolError
+from protocol import ProtocolError, calc_diff
 from world import World
 
 def timestamp():
@@ -51,7 +50,7 @@ class GameClient(WebSocketServerProtocol):
 
 class Game:
   def __init__(self):
-    self.world = World()
+    self.world = World(self)
     self.clients = []
     self.debug = True
     self.ticks_per_second = 20.0
