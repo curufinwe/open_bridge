@@ -35,9 +35,9 @@ class State
   def apply(patch)
     changes, changed = @last_proposed_state.diff(@proposed_state)
     @connection.send_changes(changes) if changed
-    @proposed_state.apply(patch)
-    @proposed_state.delete_nils!
-    @authoritive_state = @proposed_state.deep_copy
+    @authoritive_state.apply(patch)
+    @authoritive_state.delete_nils!
+    @proposed_state = @authoritive_state.deep_copy
     @last_proposed_state = @proposed_state
     puts @authoritive_state.inspect if $DEBUG
     @proposed_state = @proposed_state.deep_copy
