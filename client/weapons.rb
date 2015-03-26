@@ -36,6 +36,8 @@ class WeaponsInterface
     @weapons_cone.pos =[ship.sprite.x, ship.sprite.y]
     @weapons_cone.dir = @ship.state :direction
     @weapons_cone.update
+    @weapons_status.update
+    @weapons_status.ship = ship
 
     mx,my = @game.input.activePointer.worldX, @game.input.activePointer.worldY
     @weapons_target.x=mx
@@ -65,6 +67,7 @@ class WeaponsInterface
     @weapons_selected = @game.add.sprite(0,0,"weapons_selected")
     @weapons_selected.anchor.setTo(0.5,0.5)
     @weapons_cone = Cone.new(@game)
+    @weapons_status = WeaponsStatusDisplay.new(@game)
   end
 
 end
