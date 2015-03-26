@@ -32,6 +32,10 @@ class Ship < Body
     return [ state(:x), state(:y) ]
   end
 
+  def rot
+    state :direction
+  end
+
   def update
     @sprite[:x] = state :x
     @sprite[:y] = state :y

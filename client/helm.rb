@@ -23,9 +23,9 @@ class HelmInterface
   def update
     next unless ship
 
-    @game.camera.view.x = ship.sprite.x-400
-    @game.camera.view.y = ship.sprite.y-300
-    @helm_nav[:rotation] = ship.sprite[:rotation]+`Math.PI`
+    @game.camera.view.x = ship.pos[0]-400
+    @game.camera.view.y = ship.pos[1]-300
+    @helm_nav[:rotation] = ship.rot
     @game.camera[:bounds]=`null`
     
      rot,sp = calc_keyboard_throttle
