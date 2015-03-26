@@ -1,4 +1,5 @@
 class State
+  attr_accessor :events
 
   def initial_state
     {
@@ -32,7 +33,16 @@ class State
     @connection.send_changes(changes)
   end
 
+  def extract_events!(patch)
+    if patch.include? "events"
+      @events = patch["events"].values
+      puts @events.inspect
+      patch.delete("events")
+    end
+  end
+
   def apply(patch)
+    extract_events!(patch)
     changes, changed = @last_proposed_state.diff(@proposed_state)
     @connection.send_changes(changes) if changed
     @authoritive_state.apply(patch)
