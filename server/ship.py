@@ -1,5 +1,6 @@
-from math import *
 from enum import Enum
+from math import *
+import random
 
 from util import *
 from vector import *
@@ -98,8 +99,8 @@ class ShipRMC(ShipModule): # Rotation Management Computer
 
 class ShipLaser(ShipModule):
   class WeaponState(Enum):
-    idle   = 0
-    firing = 1
+    idle   = 'idle'
+    firing = 'firing'
 
   role = 'weapon'
 
