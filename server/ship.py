@@ -2,6 +2,7 @@ from enum import Enum
 from math import *
 import random
 
+from event import LaserFiredEvent, DamageReceivedEvent
 from protocol import *
 from util import get_id
 from vector import *
@@ -29,7 +30,10 @@ class ShipNode(Serializable):
     self.max_hp = 100.0
 
   def do_dmg(self, dmg):
+    self.old_hp = self.hp
     self.hp = clamp(self.hp - dmg, 0, self.max_hp)
+    effective_dmg = self.old_hp - self.hp
+    self._ship.handle_event(DamageReceivedEvent(self, effective_dmg))
 
   def apply_diff(self, diff):
     super().apply_diff(diff)
@@ -122,6 +126,8 @@ class ShipLaser(ShipModule):
       dmg = self.power if self.min_range <= r <= self.max_range else 0.0
       self.target.do_dmg(dmg)
       self.energy = 0.0
+      self.state = ShipLaser.WeaponState.idle
+      self._ship.handle_event(LaserFiredEvent(self._ship, self.target, self._index))
 
   def apply_diff(self, diff):
     Serializable.apply_diff(self, diff)
@@ -223,6 +229,9 @@ class Ship(Serializable):
   def move(self, vector):
     self.x += vector[0]
     self.y += vector[1]
+
+  def handle_event(self, evt):
+    self._world.handle_event(evt)
 
   def update_direction(self):
     if self.avg_dmg('rmc') < 1.0:

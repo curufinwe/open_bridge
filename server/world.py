@@ -33,6 +33,9 @@ class World:
         return s
     return None
 
+  def handle_event(self, evt):
+    self.game.handle_event(evt)
+
   def update(self):
     for s in self.ships:
       s.update()
