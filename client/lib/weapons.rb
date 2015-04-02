@@ -56,6 +56,7 @@ class WeaponsInterface
     update_camera
     update_weapons_ui_elements
 
+    @cones.ship = ship
     @cones.update
     @beams.ship = ship
     @beams.update

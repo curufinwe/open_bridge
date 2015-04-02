@@ -1,4 +1,5 @@
 class ConeDisplay
+  attr_accessor :ship
   def initialize(game,state)
     @game = game
     @state = state
@@ -64,10 +65,21 @@ class ConeDisplay
   end
 
   def update_available_weapons!
-    @ships_to_weapons.each_value do |id_to_cone|
-      id_to_cone.each_value do |cone|
-        cone.update
+    @ships_to_weapons.each_pair do |ship,wid_to_cone|
+      wid_to_cone.each_value do |cone|
+        update_cone(ship,cone)
       end
     end
+  end
+
+  def update_cone(ship,cone)
+    if ship == @ship
+      cone.color = 0x0033ff
+      cone.transparency = 0.2
+    else
+      cone.color = 0xff3300
+      cone.transparency = 0.1
+    end
+    cone.update
   end
 end

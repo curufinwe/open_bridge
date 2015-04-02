@@ -25,6 +25,7 @@ class HelmInterface
   end
 
   def update_overlays
+    @cones.ship = ship
     @cones.update
     @beams.ship = ship
     @beams.update
