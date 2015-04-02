@@ -15,10 +15,11 @@ class ShipNode(Serializable):
                     'hp'    : limited_precision_float('hp'    , 5),
                     'max_hp': limited_precision_float('max_hp', 5)  }
   
-  writable_attr = { 'x'     : float,
-                    'y'     : float,
-                    'hp'    : float,
-                    'max_hp': float  }
+  writable_attr = { 'x'     : float_setter('x'     , float('-inf'), float('inf')),
+                    'y'     : float_setter('y'     , float('-inf'), float('inf')),
+                    'hp'    : float_setter('hp'    , 0.0          , float('inf')),
+                    'max_hp': float_setter('max_hp', 0.0          , float('inf')),
+                  }
 
   def __init__(self, x, y):
     self._index = -1 # index in the ship list containing this Node
@@ -34,9 +35,6 @@ class ShipNode(Serializable):
     self.hp = clamp(self.hp - dmg, 0, self.max_hp)
     effective_dmg = self.old_hp - self.hp
     self._ship.handle_event(DamageReceivedEvent(self, effective_dmg))
-
-  def apply_diff(self, diff):
-    super().apply_diff(diff)
 
 class ShipModule(Serializable):
   role = ''
@@ -65,9 +63,6 @@ class ShipModule(Serializable):
       max_hp += n.max_hp
     if max_hp > 0.0:
       self.damage = 1.0 - hp / max_hp
-
-  def apply_diff(self, diff):
-    pass
 
 class ShipEngine(ShipModule):
   role = 'engine'
@@ -100,15 +95,15 @@ class ShipLaser(ShipModule):
                     'state'      : lambda obj: obj.state.name,
                   }
 
-  writable_attr = { 'power'      : float,
-                    'min_range'  : float,
-                    'max_range'  : float,
-                    'direction'  : float,
-                    'firing_arc' : float,
-                    'energy'     : float,
-                    'max_energy' : float,
-                    'reload_rate': float,
-                    'state'      : WeaponState,
+  writable_attr = { 'power'      : float_setter('power'      , 0.0, float('inf')),
+                    'min_range'  : float_setter('min_range'  , 0.0, float('inf')),
+                    'max_range'  : float_setter('max_range'  , 0.0, float('inf')),
+                    'direction'  : float_setter('direction'  , 0.0, 2*pi        ),
+                    'firing_arc' : float_setter('firing_arc' , 0.0, 2*pi        ),
+                    'energy'     : float_setter('energy'     , 0.0, float('inf')),
+                    'max_energy' : float_setter('max_energy' , 0.0, float('inf')),
+                    'reload_rate': float_setter('reload_rate', 0.0, float('inf')),
+                    'state'      : generic_setter('state', to_enum(WeaponState)) ,
                   }
 
   def __init__(self):
@@ -146,12 +141,11 @@ class ShipLaser(ShipModule):
           self.state = ShipLaser.WeaponState.idle
           self._ship.handle_event(LaserFiredEvent(self._ship, self.target, self._index))
 
-  def apply_diff(self, diff):
-    Serializable.apply_diff(self, diff)
-    ShipModule.apply_diff(self, diff)
+  def _apply_diff(self, diff):
     if 'target' in diff:
       ship_id = to_int(diff['target'], error='target is not an int')
       self.target = self._ship._world.getShipById(ship_id)
+    return set(['target'])
 
 class Ship(Serializable):
   readable_attr = { 'x'             : limited_precision_float('x'             , 5),
@@ -171,18 +165,20 @@ class Ship(Serializable):
                     'dx'            : lambda obj: round(obj.calc_speed_x(), 5)    ,
                     'dy'            : lambda obj: round(obj.calc_speed_y(), 5)      }
 
-  writable_attr = { 'x'             : float,
-                    'y'             : float,
-                    'direction'     : float,
-                    'speed'         : float,
-                    'trajectory'    : float,
-                    'rotation'      : float,
-                    'throttle_speed': float,
-                    'throttle_rot'  : float,
-                    'max_speed'     : float,
-                    'max_accel'     : float,
-                    'max_rot'       : float,
-                    'max_rot_accel' : float  }
+  writable_attr = { 'x'             : float_setter('x'             , float('-inf'), float('inf')                  ),
+                    'y'             : float_setter('y'             , float('-inf'), float('inf')                  ),
+                    'direction'     : float_setter('direction'     , 0.0          , 2*pi         , open_right=True),
+                    'speed'         : float_setter('speed'         , 0.0          , float('inf')                  ),
+                    'trajectory'    : float_setter('trajectory'    , 0.0          , 2*pi         , open_right=True),
+                    'rotation'      : float_setter('rotation'      , 0.0          , 2*pi         , open_right=True),
+                    'throttle_speed': float_setter('throttle_speed', -1.0         , 1.0                           ),
+                    'throttle_rot'  : float_setter('throttle_rot'  , -1.0         , 1.0                           ),
+                    'max_speed'     : float_setter('max_speed'     , 0.0          , float('inf')                  ),
+                    'max_accel'     : float_setter('max_accel'     , 0.0          , float('inf')                  ),
+                    'max_rot'       : float_setter('max_rot'       , 0.0          , 2*pi         , open_right=True),
+                    'max_rot_accel' : float_setter('max_rot_accel' , 0.0          , 2*pi         , open_right=True),
+                    'nodes'         : [ apply_to_list(name='nodes', func=None) ]
+                  }
 
   def __init__(self):
     self._world   = None
@@ -296,17 +292,8 @@ class Ship(Serializable):
     self.update_speed()
     self.move(self.calc_speed_vector())
 
-  def apply_diff(self, diff):
-    super().apply_diff(diff)
+  def _apply_diff(self, diff):
     for key in diff:
-      if key == 'nodes':
-        if type(diff[key]) != dict:
-          raise ProtocolError(reason='Node diffs should be objects')
-        for node_key, node_diff in diff[key].items():
-          node_idx = to_int(node_key, error='Node ids should be integers, not "%s"')
-          if node_idx >= len(self.nodes) or node_idx < 0:
-            raise ProtocolError(reason='Node index %d is not valid. Should be in [%d, %d)' %(node_idx, 0, len(self.nodes)))
-          self.nodes[node_idx].apply_diff(node_diff)
       if key == 'modules':
         if type(diff[key]) != dict:
           raise ProtocolError(reason='Modules diffs should be objects')
@@ -319,12 +306,7 @@ class Ship(Serializable):
               self.modules[role][mod_idx].apply_diff(mod_diff)
           else:
             raise ProtocolError(reason='Unknown module "%s"' % role)
-      else:
-        raise ProtocolError(reason='Unknown key for ship: %s' % key)
-
-    self.direction      = clamp(self.direction     ,  0.0, 2*pi)
-    self.throttle_speed = clamp(self.throttle_speed, -1.0,  1.0)
-    self.throttle_rot   = clamp(self.throttle_rot  , -1.0,  1.0)
+    return set(['modules'])
 
   def serialize_modules(self):
     res = {}

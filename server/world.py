@@ -50,7 +50,10 @@ class World:
         raise ProtocolError(reason='Ship diffs should be an object')
 
       for key, val in diff['ships'].items():
-        key = to_int(key, error='ship id is not an int but "%s"' % key)
+        try:
+          key = int(key)
+        except:
+          raise ProtocolError('ship id is not an int but "%s"' % key)
         idx = find_obj_by_id(self.ships, key)
         if idx is None:
           raise ProtocolError(reason='Invalid id for a ship: %d' % key)
