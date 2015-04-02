@@ -1,3 +1,6 @@
+require 'cone_display'
+require 'beam_display'
+
 class WeaponsInterface
   attr_accessor :state, :ship
 
@@ -26,28 +29,19 @@ class WeaponsInterface
     set_target(selected_ship)
   end
 
-  def create_beam(id)
-    Beam.new(@game, ship.pos, state.ids_to_ships[id].pos, 0xffff00)
-  end
 
   def update
     enable_clicks_for_targets!
-    @state.events.each do |evnt|
-      if evnt["type"] == "laser_fired"
-        id = evnt["target"]
-        create_beam(id)
-      end
-    end
 
     next unless ship
     @game.camera.view.x = ship.sprite.x-400
     @game.camera.view.y = ship.sprite.y-300
     @game.camera[:bounds]=`null`
-    @weapons_cone.pos =[ship.sprite.x, ship.sprite.y]
-    @weapons_cone.dir = @ship.state :direction
-    @weapons_cone.update
-    @weapons_status.update
+    @cones.update
+    @beams.ship = ship
+    @beams.update
     @weapons_status.ship = ship
+    @weapons_status.update
 
     mx,my = @game.input.activePointer.worldX, @game.input.activePointer.worldY
     @weapons_target.x=mx
@@ -75,8 +69,9 @@ class WeaponsInterface
     @weapons_target.anchor.setTo(0.5,0.5)
     @weapons_selected = @game.add.sprite(0,0,"weapons_selected")
     @weapons_selected.anchor.setTo(0.5,0.5)
-    @weapons_cone = Cone.new(@game)
+    @cones = ConeDisplay.new(@game, @state)
     @weapons_status = WeaponsStatusDisplay.new(@game)
+    @beams = BeamDisplay.new(@game,@state)
   end
 
 end

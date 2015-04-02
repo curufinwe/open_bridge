@@ -43,16 +43,16 @@ class HelmInterface
       @helm_target.x=mx
       @helm_target.y=my
       dirx, diry = mx-sx, my-sy
-      angle = Math.atan2(dirx,diry)*Math::RadToDeg
-      shipa = @ship.sprite[:rotation]*Math::RadToDeg
+      angle = JSMath.atan2(dirx,diry)*JSMath::RadToDeg
+      shipa = @ship.sprite[:rotation]*JSMath::RadToDeg
       adiff = angle-shipa
-      adiff = Math.clamp_angle180(adiff)
-      throttle_rot = (Math.clamp(-90, adiff, 90) / 90.0)
+      adiff = JSMath.clamp_angle180(adiff)
+      throttle_rot = (JSMath.clamp(-90, adiff, 90) / 90.0)
       lenSQ = dirx**2 + diry**2
       throttle_speed = 0
       if lenSQ > 1 
-        len = Math.sqrt(lenSQ)
-        throttle_speed =  (Math.clamp(50, len, 200)-50) / 150.0
+        len = JSMath.sqrt(lenSQ)
+        throttle_speed =  (JSMath.clamp(50, len, 200)-50) / 150.0
       end
       return throttle_rot, throttle_speed
   end
@@ -81,8 +81,8 @@ class HelmInterface
     @deg_indicators = []
     (0...steps).each do |ind|
       deg = ind*(360/steps)
-      desc = Math.clamp_angle360(deg+90).to_s
-      x,y = *Math.dir(deg*Math::DegToRad,220)
+      desc = JSMath.clamp_angle360(deg+90).to_s
+      x,y = *JSMath.dir(deg*JSMath::DegToRad,220)
       text = @game.add.text(x,y+2.5, desc, Text::DefaultText);
       text.fixedToCamera = true;
       text.cameraOffset.setTo(400+x, 300+y);

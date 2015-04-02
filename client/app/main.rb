@@ -1,7 +1,21 @@
-# ERB
-
-
 $DEBUG = false
+require 'opal'
+require 'native'
+require 'set'
+require "helpers.rb"
+require "jsmath.rb"
+require "text.rb"
+require "cone.rb"
+require "bar.rb"
+require "weapons_status_display.rb"
+require "input.rb"
+require "connect.rb"
+require "state.rb"
+require "annotated_state.rb"
+require "beam.rb"
+require "body.rb"
+require "weapons.rb"
+require "helm.rb"
 
 def get_url_params
   params = `window.location.search`.gsub(/^\?/,"").split("&").each.with_object({}) do |param,h|
@@ -47,7 +61,6 @@ render = lambda{
 }
 
 update = lambda do
-
   gui.ship ||= state.ids_to_ships["1"] if state.ids_to_ships["1"]
   input.on("ship1"){ gui.ship = state.ids_to_ships["1"] }
   input.on("ship2"){ gui.ship = state.ids_to_ships["2"] }

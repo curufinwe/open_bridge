@@ -1,4 +1,4 @@
-module Math
+module JSMath
   PI = `Math.PI`
   RadToDeg = `180/Math.PI`
   DegToRad = `Math.PI/180`

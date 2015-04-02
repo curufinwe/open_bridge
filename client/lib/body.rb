@@ -36,6 +36,10 @@ class Ship < Body
     state :direction
   end
 
+  def weapons
+    state "modules", "weapon"
+  end
+
   def update
     @sprite[:x] = state :x
     @sprite[:y] = state :y

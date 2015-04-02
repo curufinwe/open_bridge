@@ -9,6 +9,10 @@ class AnotatedState < State
     super
   end
 
+  def ships
+    get(%w{world ships}).each_key.map{|id| @ids_to_ships[id]}
+  end
+
   def update_objects!()
     shipinfo = { "sprite" => "ship", "x" => 30, "y" => 30, "dx" => 0, "dy" => 0 }
     get(%w{world ships}).each_key do |id|
