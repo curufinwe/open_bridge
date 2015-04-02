@@ -25,11 +25,15 @@ class HelmInterface
 
     @game.camera.view.x = ship.pos[0]-400
     @game.camera.view.y = ship.pos[1]-300
-    @helm_nav[:rotation] = ship.rot
+    @helm_nav[:rotation] = ship.rot+JSMath::PI
     @game.camera[:bounds]=`null`
+
+    @cones.update
+    @beams.ship = ship
+    @beams.update
     
-     rot,sp = calc_keyboard_throttle
-     mp_rot,mp_sp = calc_mouse_pull_throttle
+    rot,sp = calc_keyboard_throttle
+    mp_rot,mp_sp = calc_mouse_pull_throttle
 
     sp,rot = mp_sp,mp_rot if @game.input.activePointer.isDown
     @ship.set_state(:throttle_speed, sp)
@@ -76,6 +80,9 @@ class HelmInterface
 
     @helm_target = @game.add.sprite(0,0,"helm_target")
     @helm_target.anchor.setTo(0.5,0.5)
+
+    @cones = ConeDisplay.new(@game, @state)
+    @beams = BeamDisplay.new(@game,@state)
 
     steps = 12
     @deg_indicators = []
