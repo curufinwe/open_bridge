@@ -57,7 +57,7 @@ create = lambda{
 }
 
 render = lambda{
-  game.debug.cameraInfo(game.camera, 32, 32);
+  game.debug.cameraInfo(game.camera, 32, 32) if $DEBUG
 }
 
 update = lambda do
