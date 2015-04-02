@@ -30,19 +30,13 @@ class WeaponsInterface
   end
 
 
-  def update
-    enable_clicks_for_targets!
-
-    next unless ship
+  def update_camera
     @game.camera.view.x = ship.sprite.x-400
     @game.camera.view.y = ship.sprite.y-300
     @game.camera[:bounds]=`null`
-    @cones.update
-    @beams.ship = ship
-    @beams.update
-    @weapons_status.ship = ship
-    @weapons_status.update
+  end
 
+  def update_weapons_ui_elements
     mx,my = @game.input.activePointer.worldX, @game.input.activePointer.worldY
     @weapons_target.x=mx
     @weapons_target.y=my
@@ -56,19 +50,36 @@ class WeaponsInterface
     end
   end
 
+  def update
+    enable_clicks_for_targets!
+    next unless ship
+    update_camera
+    update_weapons_ui_elements
+
+    @cones.update
+    @beams.ship = ship
+    @beams.update
+    @weapons_status.ship = ship
+    @weapons_status.update
+  end
+
   def set_target(selected_ship)
     @selected_ship = selected_ship
     ship.set_state(["modules","weapon","0","target"],selected_ship.id)
     ship.set_state(["modules","weapon","0","state"],"firing")
   end
 
-  def create(input,state)
-    @input = input
-    @state = state
+  def create_weapons_ui_elements
     @weapons_target = @game.add.sprite(0,0,"weapons_target")
     @weapons_target.anchor.setTo(0.5,0.5)
     @weapons_selected = @game.add.sprite(0,0,"weapons_selected")
     @weapons_selected.anchor.setTo(0.5,0.5)
+  end
+
+  def create(input,state)
+    @input = input
+    @state = state
+    create_weapons_ui_elements
     @cones = ConeDisplay.new(@game, @state)
     @weapons_status = WeaponsStatusDisplay.new(@game)
     @beams = BeamDisplay.new(@game,@state)
