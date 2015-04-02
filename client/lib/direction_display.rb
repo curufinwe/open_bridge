@@ -1,3 +1,4 @@
+require 'display'
 
 class DegInfo
   attr_accessor :x, :y, :text
@@ -6,9 +7,9 @@ class DegInfo
   end
 end
 
-class DirectionDisplay
+class DirectionDisplay < Display
   def initialize(game,state)
-    @game,@state = game,state
+    super
     steps = 12
     @deg_indicators = []
     (0...steps).each do |ind|

@@ -55,7 +55,6 @@ class WeaponsInterface
     next unless ship
     update_camera
     update_weapons_ui_elements
-
     @cones.ship = ship
     @cones.update
     @beams.ship = ship

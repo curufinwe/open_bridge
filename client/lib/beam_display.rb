@@ -1,10 +1,6 @@
-class BeamDisplay
-  attr_accessor :ship
+require 'display'
 
-  def initialize(game,state)
-    @game,@state = game,state
-  end
-
+class BeamDisplay < Display
   def create_beam(fromid, toid, color)
     Beam.new(@game, @state.ids_to_ships[fromid].pos, @state.ids_to_ships[toid].pos, color)
   end

@@ -1,14 +1,17 @@
-class ConeDisplay
+require 'display'
+
+class ConeDisplay < Display
   attr_accessor :ship
   def initialize(game,state)
-    @game = game
-    @state = state
+    super
     @ships_to_weapons = {}
   end
 
   def update
     update_available_ships
   end
+
+  private 
 
   def update_available_ships
     remove_unused_ships!
