@@ -1,10 +1,4 @@
-
-class DegInfo
-  attr_accessor :x, :y, :text
-  def initialize(x,y, text)
-    @x,@y,@text = x,y, text
-  end
-end
+require 'direction_display'
 
 class HelmInterface
   attr_accessor :state, :ship
@@ -20,24 +14,37 @@ class HelmInterface
     @game.load.image("helm_target","assets/helm_target.png")
   end
 
-  def update
-    next unless ship
-
+  def update_camera
     @game.camera.view.x = ship.pos[0]-400
     @game.camera.view.y = ship.pos[1]-300
-    @helm_nav[:rotation] = ship.rot+JSMath::PI
     @game.camera[:bounds]=`null`
+  end
 
+  def update_helm_ui_elements
+    @helm_nav[:rotation] = ship.rot+JSMath::PI
+  end
+
+  def update_overlays
     @cones.update
     @beams.ship = ship
     @beams.update
-    
+  end
+
+  def calc_and_set_throttle!
     rot,sp = calc_keyboard_throttle
     mp_rot,mp_sp = calc_mouse_pull_throttle
-
     sp,rot = mp_sp,mp_rot if @game.input.activePointer.isDown
     @ship.set_state(:throttle_speed, sp)
     @ship.set_state(:throttle_rot, rot)
+  end
+
+  def update
+    next unless ship
+
+    update_camera
+    update_helm_ui_elements
+    update_overlays
+    calc_and_set_throttle!
   end
 
   def calc_mouse_pull_throttle
@@ -65,14 +72,14 @@ class HelmInterface
     return @keyboard_throttle_rot, @keyboard_throttle_speed
   end
 
-  def create(input, state)
-    @input = input
-    @state = state
+  def setup_keyboard_hooks
     @input.on("turn_left"){ |mode,_| if mode == :up then @keyboard_throttle_rot = 0 else @keyboard_throttle_rot = -1 end }
     @input.on("turn_right"){|mode,_| if mode == :up then @keyboard_throttle_rot = 0 else @keyboard_throttle_rot = 1 end }
     @input.on("accelerate"){|mode,_| if mode == :up then @keyboard_throttle_speed = 0 else @keyboard_throttle_speed = 1 end }
     @input.on("decelerate"){|mode,_| if mode == :up then @keyboard_throttle_speed = 0 else @keyboard_throttle_speed = -1 end }
+  end
 
+  def create_helm_ui_elements
     @helm_nav = @game.add.sprite(0,0,"helm_nav")
     @helm_nav.anchor.setTo(0.5,0.5)
     @helm_nav.fixedToCamera = true;
@@ -80,23 +87,16 @@ class HelmInterface
 
     @helm_target = @game.add.sprite(0,0,"helm_target")
     @helm_target.anchor.setTo(0.5,0.5)
+  end
 
+  def create(input, state)
+    @input = input
+    @state = state
+    setup_keyboard_hooks
+    create_helm_ui_elements
     @cones = ConeDisplay.new(@game, @state)
     @beams = BeamDisplay.new(@game,@state)
-
-    steps = 12
-    @deg_indicators = []
-    (0...steps).each do |ind|
-      deg = ind*(360/steps)
-      desc = JSMath.clamp_angle360(deg+90).to_s
-      x,y = *JSMath.dir(deg*JSMath::DegToRad,220)
-      text = @game.add.text(x,y+2.5, desc, Text::DefaultText);
-      text.fixedToCamera = true;
-      text.cameraOffset.setTo(400+x, 300+y);
-      text.anchor.setTo(0.5,0.5)
-      deg = DegInfo.new(x-5, y+5, text)
-      @deg_indicators << deg
-    end
+    @directions = DirectionDisplay.new(@game,@state)
   end
 
 end
