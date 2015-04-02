@@ -23,7 +23,6 @@ class Cone
   end
   
   def update
-    #@graphics.alpha = 0.2
     return unless @ship
     update_params
     @graphics.clear

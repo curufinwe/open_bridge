@@ -1,7 +1,8 @@
 class WeaponsStatusDisplay
   attr_accessor :ship
-  def initialize(game)
+  def initialize(game,state)
     @last_ship = nil
+    @state = state
     @game = game
     @weapon_bars = {}
   end

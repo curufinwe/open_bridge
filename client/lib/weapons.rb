@@ -81,7 +81,7 @@ class WeaponsInterface
     @state = state
     create_weapons_ui_elements
     @cones = ConeDisplay.new(@game, @state)
-    @weapons_status = WeaponsStatusDisplay.new(@game)
+    @weapons_status = WeaponsStatusDisplay.new(@game,@state)
     @beams = BeamDisplay.new(@game,@state)
   end
 
