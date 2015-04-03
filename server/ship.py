@@ -7,8 +7,6 @@ from protocol import *
 from util import *
 from vector import *
 
-clamp = lambda val, low, high: max(low, min(high, val))
-
 class ShipNode(Serializable):
   readable_attr = { 'x'     : limited_precision_float('x'     , 5),
                     'y'     : limited_precision_float('y'     , 5),
@@ -143,7 +141,10 @@ class ShipLaser(ShipModule):
 
   def _apply_diff(self, diff):
     if 'target' in diff:
-      ship_id = to_int(diff['target'], error='target is not an int')
+      try:
+        ship_id = int(diff['target'])
+      except ValueError:
+        raise ProtocolError('target is not an int')
       self.target = self._ship._world.getShipById(ship_id)
     return set(['target'])
 
@@ -160,6 +161,7 @@ class Ship(Serializable):
                     'max_accel'     : limited_precision_float('max_accel'     , 5),
                     'max_rot'       : limited_precision_float('max_rot'       , 5),
                     'max_rot_accel' : limited_precision_float('max_rot_accel' , 5),
+                    'radius'        : limited_precision_float('radius'        , 5),
                     'modules'       : lambda obj: obj.serialize_modules()         ,
                     'nodes'         : lambda obj: obj.serialize_nodes()           ,
                     'dx'            : lambda obj: round(obj.calc_speed_x(), 5)    ,
@@ -177,6 +179,7 @@ class Ship(Serializable):
                     'max_accel'     : float_setter('max_accel'     , 0.0          , float('inf')                  ),
                     'max_rot'       : float_setter('max_rot'       , 0.0          , 2*pi         , open_right=True),
                     'max_rot_accel' : float_setter('max_rot_accel' , 0.0          , 2*pi         , open_right=True),
+                    'radius'        : float_setter('radius'        , 0.0          , float('inf')                  ),
                     'nodes'         : [ apply_to_list(name='nodes', func=None) ]
                   }
 
@@ -199,6 +202,7 @@ class Ship(Serializable):
     self.max_accel      =  0.2
     self.max_rot        =  0.1
     self.max_rot_accel  =  0.01
+    self.radius         = 30.0
 
     self.nodes   = []
     self.modules = {}
@@ -238,6 +242,12 @@ class Ship(Serializable):
         s += m.damage
       return s / len(self.modules[role])
     return 1.0
+
+  def add_impulse(self, vec):
+    cur_vec  = to_vec(self.trajectory, self.speed)
+    new_vec = add_vec(cur_vec, vec)
+    self.trajectory = atan2(new_vec[1], new_vec[0])
+    self.speed = hypot(*new_vec)
 
   def move(self, vector):
     self.x += vector[0]
@@ -300,7 +310,10 @@ class Ship(Serializable):
         for role in diff[key]:
           if role in self.modules:
             for mod_key, mod_diff in diff[key][role].items():
-              mod_idx = to_int(mod_key, error='Module ids should be integers, not "%s"' % mod_key)
+              try:
+                mod_idx = int(mod_key)
+              except ValueError:
+                raise ProtocolError(reason='Module ids should be integers, not "%s"' % mod_key)
               if mod_idx >= len(self.modules[role]) or mod_idx < 0:
                 raise ProtocolError(reason='Module index %d is not valid. Should be in [%d, %d)' %(mod_idx, 0, len(self.modules[role])))
               self.modules[role][mod_idx].apply_diff(mod_diff)

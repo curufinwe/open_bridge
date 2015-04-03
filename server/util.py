@@ -14,3 +14,6 @@ def deg2rad(a):
 
 def rad2deg(r):
   return r * RAD2DEG
+
+clamp = lambda val, low, high: max(low, min(high, val))
+

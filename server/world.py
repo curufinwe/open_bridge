@@ -1,7 +1,9 @@
 from math import *
 
-from protocol import to_int, ProtocolError
+from protocol import ProtocolError
 from ship import Ship
+from util import clamp
+from vector import *
 
 def enforce_boundary(dist, obj):
   obj_dist = hypot(obj.x, obj.y)
@@ -36,6 +38,20 @@ class World:
   def handle_event(self, evt):
     self.game.handle_event(evt)
 
+  def detect_collision(self):
+    for idx_a in range(len(self.ships)):
+      ship_a = self.ships[idx_a]
+      for idx_b in range(idx_a + 1, len(self.ships)):
+        ship_b = self.ships[idx_b]
+        diff = (ship_a.x - ship_b.x, ship_a.y - ship_b.y)
+        dist = hypot(*diff)
+        min_dist = ship_a.radius + ship_b.radius
+        if dist < min_dist:
+          force = 20 * (1.0 - (dist / min_dist))
+          dist = clamp(dist, 1.0, float('inf'))
+          ship_a.add_impulse(mul_vec(diff,  force / dist))
+          ship_b.add_impulse(mul_vec(diff, -force / dist))
+
   def update(self):
     for s in self.ships:
       s.update()
@@ -43,6 +59,7 @@ class World:
     for b in self.bodies:
       b.update()
       enforce_boundary(self.sector_size, b)
+    self.detect_collision()
 
   def apply_diff(self, diff):
     if 'ships' in diff:
