@@ -3,7 +3,7 @@ import functools as fun
 from math import *
 import random
 
-from event import LaserFiredEvent, DamageReceivedEvent
+from event import *
 from protocol import *
 from util import *
 from vector import *
@@ -74,7 +74,6 @@ class ShipSMC(ShipModule): # Speed Management Computer
 
 class ShipRMC(ShipModule): # Rotation Management Computer
   role = 'rmc'
-
 
 class WeaponState(Enum):
   idle   = 'idle'
@@ -309,6 +308,7 @@ class Ship(Serializable):
     hp, max_hp = fun.reduce(add_vec, map(lambda n: (n.hp, n.max_hp), self.nodes))
     if hp / max_hp < .20:
       self.state = ShipState.destroyed
+      self.handle_event(ShipDestroyedEvent(self))
 
   def update(self):
     self.update_modules()
