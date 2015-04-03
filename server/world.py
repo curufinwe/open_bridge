@@ -1,7 +1,7 @@
 from math import *
 
 from protocol import ProtocolError
-from ship import Ship
+from ship import Ship, ShipState
 from util import clamp
 from vector import *
 
@@ -60,6 +60,15 @@ class World:
       b.update()
       enforce_boundary(self.sector_size, b)
     self.detect_collision()
+
+    ships_to_del = []
+    for s_idx, s in enumerate(self.ships):
+      s.update_state()
+      if s.state == ShipState.destroyed:
+        ships_to_del.append(s_idx)
+    ships_to_del.reverse()
+    for s_idx in ships_to_del:
+      del self.ships[s_idx]
 
   def apply_diff(self, diff):
     if 'ships' in diff:

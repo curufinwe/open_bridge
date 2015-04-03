@@ -1,4 +1,5 @@
 from enum import Enum
+import functools as fun
 from math import *
 import random
 
@@ -74,10 +75,12 @@ class ShipSMC(ShipModule): # Speed Management Computer
 class ShipRMC(ShipModule): # Rotation Management Computer
   role = 'rmc'
 
+
+class WeaponState(Enum):
+  idle   = 'idle'
+  firing = 'firing'
+
 class ShipLaser(ShipModule):
-  class WeaponState(Enum):
-    idle   = 'idle'
-    firing = 'firing'
 
   role = 'weapon'
 
@@ -116,11 +119,11 @@ class ShipLaser(ShipModule):
     self.max_energy  = 100.0
     self.reload_rate =   5.0
     self.target      =  None
-    self.state       = ShipLaser.WeaponState.idle
+    self.state       = WeaponState.idle
 
   def update(self):
     self.energy = clamp(self.energy + self.reload_rate, 0, self.max_energy)
-    if self.energy == self.max_energy and self.state == ShipLaser.WeaponState.firing and self.target is not None:
+    if self.energy == self.max_energy and self.state == WeaponState.firing and self.target is not None:
       diff_x = self.target.x - self._ship.x
       diff_y = self.target.y - self._ship.y
       r = hypot(diff_x, diff_y)
@@ -136,7 +139,7 @@ class ShipLaser(ShipModule):
           dmg = self.power
           self.target.do_dmg(dmg)
           self.energy = 0.0
-          self.state = ShipLaser.WeaponState.idle
+          self.state = WeaponState.idle
           self._ship.handle_event(LaserFiredEvent(self._ship, self.target, self._index))
 
   def _apply_diff(self, diff):
@@ -147,6 +150,10 @@ class ShipLaser(ShipModule):
         raise ProtocolError('target is not an int')
       self.target = self._ship._world.getShipById(ship_id)
     return set(['target'])
+
+class ShipState(Enum):
+  operational = 'operational'
+  destroyed   = 'destroyed'
 
 class Ship(Serializable):
   readable_attr = { 'x'             : limited_precision_float('x'             , 5),
@@ -203,6 +210,8 @@ class Ship(Serializable):
     self.max_rot        =  0.1
     self.max_rot_accel  =  0.01
     self.radius         = 30.0
+
+    self.state          = ShipState.operational
 
     self.nodes   = []
     self.modules = {}
@@ -295,6 +304,11 @@ class Ship(Serializable):
     for modules in self.modules.values():
       for module in modules:
         module.update()
+
+  def update_state(self):
+    hp, max_hp = fun.reduce(add_vec, map(lambda n: (n.hp, n.max_hp), self.nodes))
+    if hp / max_hp < .20:
+      self.state = ShipState.destroyed
 
   def update(self):
     self.update_modules()
