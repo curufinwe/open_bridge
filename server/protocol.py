@@ -87,6 +87,9 @@ def generic_setter(name, setter):
 def float_setter(name, *args, **kwargs):
   return generic_setter(name, to_float(*args, **kwargs))
 
+def int_setter(name, *args, **kwargs):
+  return generic_setter(name, to_int(*args, **kwargs))
+
 # -------------------- Exceptions --------------------
 
 class ProtocolError(BaseException):
