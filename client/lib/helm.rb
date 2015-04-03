@@ -1,62 +1,62 @@
+require 'gui'
 require 'direction_display'
 
-class HelmInterface
-  attr_accessor :state, :ship
-
-  def initialize(game)
-    @game = game
+class HelmInterface < Gui
+  
+  def create()
     @keyboard_throttle_rot = 0;
     @keyboard_throttle_speed = 0;
+    setup_keyboard_hooks
+    create_helm_ui_elements
+    add_display(ConeDisplay)
+    add_display(BeamDisplay)
+    add_display(DirectionDisplay)
   end
 
-  def preload
-    @game.load.image("helm_nav","assets/helm_nav.png")
-    @game.load.image("helm_target","assets/helm_target.png")
+  def self.preload(game)
+    game.load.image("helm_nav","assets/helm_nav.png")
+    game.load.image("helm_target","assets/helm_target.png")
   end
+
+  def update
+    next unless active_ship
+    update_camera
+    update_helm_ui_elements
+    update_displays
+    calc_and_set_throttle!
+  end
+
+  private
 
   def update_camera
-    @game.camera.view.x = ship.pos[0]-400
-    @game.camera.view.y = ship.pos[1]-300
+    @game.camera.view.x = active_ship.pos[0]-400
+    @game.camera.view.y = active_ship.pos[1]-300
     @game.camera[:bounds]=`null`
   end
 
   def update_helm_ui_elements
-    @helm_nav[:rotation] = ship.rot+JSMath::PI
+    @helm_nav[:rotation] = active_ship.rot+JSMath::PI
   end
 
-  def update_overlays
-    @cones.ship = ship
-    @cones.update
-    @beams.ship = ship
-    @beams.update
-  end
 
   def calc_and_set_throttle!
     rot,sp = calc_keyboard_throttle
     mp_rot,mp_sp = calc_mouse_pull_throttle
     sp,rot = mp_sp,mp_rot if @game.input.activePointer.isDown
-    @ship.set_state(:throttle_speed, sp)
-    @ship.set_state(:throttle_rot, rot)
+    active_ship.set_state(:throttle_speed, sp)
+    active_ship.set_state(:throttle_rot, rot)
   end
 
-  def update
-    next unless ship
-
-    update_camera
-    update_helm_ui_elements
-    update_overlays
-    calc_and_set_throttle!
-  end
 
   def calc_mouse_pull_throttle
       @helm_target.visible = @game.input.activePointer.isDown
       mx,my = @game.input.activePointer.worldX, @game.input.activePointer.worldY
-      sx, sy = ship.sprite.x, ship.sprite.y
+      sx, sy = active_ship.sprite.x, active_ship.sprite.y
       @helm_target.x=mx
       @helm_target.y=my
       dirx, diry = mx-sx, my-sy
       angle = JSMath.atan2(dirx,diry)*JSMath::RadToDeg
-      shipa = @ship.sprite[:rotation]*JSMath::RadToDeg
+      shipa = active_ship.sprite[:rotation]*JSMath::RadToDeg
       adiff = angle-shipa
       adiff = JSMath.clamp_angle180(adiff)
       throttle_rot = (JSMath.clamp(-90, adiff, 90) / 90.0)
@@ -85,20 +85,13 @@ class HelmInterface
     @helm_nav.anchor.setTo(0.5,0.5)
     @helm_nav.fixedToCamera = true;
     @helm_nav.cameraOffset.setTo(400, 300);
+    add_sprite(@helm_nav)
 
     @helm_target = @game.add.sprite(0,0,"helm_target")
     @helm_target.anchor.setTo(0.5,0.5)
+    add_sprite(@helm_target)
   end
 
-  def create(input, state)
-    @input = input
-    @state = state
-    setup_keyboard_hooks
-    create_helm_ui_elements
-    @cones = ConeDisplay.new(@game, @state)
-    @beams = BeamDisplay.new(@game,@state)
-    @directions = DirectionDisplay.new(@game,@state)
-  end
 
 end
 

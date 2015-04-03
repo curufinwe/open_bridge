@@ -1,14 +1,21 @@
-require 'display'
+require 'gui'
 
-class ConeDisplay < Display
-  attr_accessor :ship
-  def initialize(game,state)
-    super
+class ConeDisplay < Gui
+
+  def create
     @ships_to_weapons = {}
   end
 
   def update
     update_available_ships
+  end
+
+  def activate
+    update_available_ships
+  end
+
+  def deactivate
+    destroy
   end
 
   private 
@@ -76,7 +83,7 @@ class ConeDisplay < Display
   end
 
   def update_cone(ship,cone)
-    if ship == @ship
+    if active_ship == ship
       cone.color = 0x0033ff
       cone.transparency = 0.2
     else
@@ -84,5 +91,14 @@ class ConeDisplay < Display
       cone.transparency = 0.1
     end
     cone.update
+  end
+
+  def destroy
+    @ships_to_weapons.each_pair do |ship, wid_to_cone|
+      wid_to_cone.each_pair do |wid, cone|
+        cone.destroy
+      end
+    end
+    @ships_to_weapons = {}
   end
 end

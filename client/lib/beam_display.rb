@@ -1,6 +1,7 @@
-require 'display'
+require 'gui'
 
-class BeamDisplay < Display
+class BeamDisplay < Gui
+
   def create_beam(fromid, toid, color)
     Beam.new(@game, @state.ids_to_ships[fromid].pos, @state.ids_to_ships[toid].pos, color)
   end
@@ -11,7 +12,7 @@ class BeamDisplay < Display
         toid = evnt["target"].to_s
         fromid = evnt["source"].to_s
         color = 0xf04000
-        color = 0x00f060 if fromid == @ship.id
+        color = 0x00f060 if fromid == active_ship.id
         create_beam(fromid, toid, color)
       end
     end

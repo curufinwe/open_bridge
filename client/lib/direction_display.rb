@@ -1,4 +1,4 @@
-require 'display'
+require 'gui'
 
 class DegInfo
   attr_accessor :x, :y, :text
@@ -7,7 +7,7 @@ class DegInfo
   end
 end
 
-class DirectionDisplay < Display
+class DirectionDisplay < Gui
   def initialize(game,state)
     super
     steps = 12
@@ -20,6 +20,7 @@ class DirectionDisplay < Display
       text.fixedToCamera = true;
       text.cameraOffset.setTo(400+x, 300+y);
       text.anchor.setTo(0.5,0.5)
+      add_sprite(text)
       deg = DegInfo.new(x-5, y+5, text)
       @deg_indicators << deg
     end

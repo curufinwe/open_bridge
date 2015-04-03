@@ -1,17 +1,39 @@
+require 'gui'
 require 'cone_display'
 require 'beam_display'
+require 'weapons_status_display'
 
-class WeaponsInterface
-  attr_accessor :state, :ship
+class WeaponsInterface < Gui
 
-  def initialize(game)
-    @game = game
+  def self.preload(game)
+    game.load.image("weapons_target","assets/weapons_target.png")
+    game.load.image("weapons_selected","assets/weapons_selected.png")
   end
 
-  def preload
-    @game.load.image("weapons_target","assets/weapons_target.png")
-    @game.load.image("weapons_selected","assets/weapons_selected.png")
+  def create()
+    create_weapons_ui_elements
+    add_display(ConeDisplay)
+    add_display(WeaponsStatusDisplay)
+    add_display(BeamDisplay)
   end
+
+  def update
+    next unless active? && active_ship
+    enable_clicks_for_targets!
+    update_camera
+    update_weapons_ui_elements
+    update_displays
+  end
+
+  def activate
+    super
+  end
+
+  def deactivate
+    super
+  end
+
+  private
 
   def enable_clicks_for_targets!
     @state.ids_to_ships.each_pair do |id,other_ship|
@@ -31,8 +53,8 @@ class WeaponsInterface
 
 
   def update_camera
-    @game.camera.view.x = ship.sprite.x-400
-    @game.camera.view.y = ship.sprite.y-300
+    @game.camera.view.x = active_ship.sprite.x-400
+    @game.camera.view.y = active_ship.sprite.y-300
     @game.camera[:bounds]=`null`
   end
 
@@ -50,39 +72,20 @@ class WeaponsInterface
     end
   end
 
-  def update
-    enable_clicks_for_targets!
-    next unless ship
-    update_camera
-    update_weapons_ui_elements
-    @cones.ship = ship
-    @cones.update
-    @beams.ship = ship
-    @beams.update
-    @weapons_status.ship = ship
-    @weapons_status.update
-  end
 
   def set_target(selected_ship)
     @selected_ship = selected_ship
-    ship.set_state(["modules","weapon","0","target"],selected_ship.id)
-    ship.set_state(["modules","weapon","0","state"],"firing")
+    active_ship.set_state(["modules","weapon","0","target"],selected_ship.id)
+    active_ship.set_state(["modules","weapon","0","state"],"firing")
   end
 
   def create_weapons_ui_elements
     @weapons_target = @game.add.sprite(0,0,"weapons_target")
     @weapons_target.anchor.setTo(0.5,0.5)
+    add_sprite(@weapons_target)
     @weapons_selected = @game.add.sprite(0,0,"weapons_selected")
     @weapons_selected.anchor.setTo(0.5,0.5)
-  end
-
-  def create(input,state)
-    @input = input
-    @state = state
-    create_weapons_ui_elements
-    @cones = ConeDisplay.new(@game, @state)
-    @weapons_status = WeaponsStatusDisplay.new(@game,@state)
-    @beams = BeamDisplay.new(@game,@state)
+    add_sprite(@weapons_selected)
   end
 
 end

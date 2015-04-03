@@ -1,5 +1,5 @@
 class AnotatedState < State
-  attr_accessor :ids_to_ships
+  attr_accessor :ids_to_ships, :active_ship
   def initialize(*args)
     super(*args)
     @ids_to_ships = {}
@@ -11,6 +11,10 @@ class AnotatedState < State
 
   def ships
     get(%w{world ships}).each_key.map{|id| @ids_to_ships[id]}
+  end
+
+  def active_ship
+    @active_ship
   end
 
   def update_objects!()
