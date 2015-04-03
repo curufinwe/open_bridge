@@ -2,6 +2,7 @@ from enum import Enum
 import functools as fun
 from math import *
 import random
+import sys
 
 from event import *
 from protocol import *
@@ -54,7 +55,6 @@ class ShipModule(Serializable):
     self.nodes.append(node)
 
   def update(self):
-    self.performance = 0.0
     hp = 0.0
     max_hp = 0.0
     for n in self.nodes:
@@ -62,6 +62,24 @@ class ShipModule(Serializable):
       max_hp += n.max_hp
     if max_hp > 0.0:
       self.damage = 1.0 - hp / max_hp
+
+class EnergySource:
+  energy_source_priority = 100
+
+  def available_energy(self):
+    return 0.0
+
+  def produce_energy(self, energy):
+    pass
+
+class EnergySink:
+  energy_sink_priority = 100
+
+  def required_energy(self):
+    return 0.0
+
+  def consume_energy(self, energy):
+    pass
 
 class ShipEngine(ShipModule):
   role = 'engine'
@@ -75,12 +93,80 @@ class ShipSMC(ShipModule): # Speed Management Computer
 class ShipRMC(ShipModule): # Rotation Management Computer
   role = 'rmc'
 
+class ReactorState(Enum):
+  off      = 'off'
+  warmup   = 'warmup'
+  shutdown = 'shutdown'
+  on       = 'on'
+
+class ShipReactor(ShipModule, EnergySource):
+  role = 'reactor'
+
+  readable_attr = { 'max_energy_output': limited_precision_float('max_energy_output', 2),
+                    'warmup_time'      : get_attr('warmup_time'),
+                    'shutdown_time'    : get_attr('shutdown_time'),
+                    'state'            : lambda obj: obj.state.value,
+                    'warmup'           : limited_precision_float('warmup', 2),
+                  }
+
+  writable_attr = { 'max_energy_output':   float_setter('max_energy_output', 0.0, float('inf')),
+                    'warmup_time'      :     int_setter('warmup_time'      , 0  , sys.maxsize ),
+                    'shutdown_time'    :     int_setter('shutdown_time'    , 0  , sys.maxsize ),
+                    'state'            : generic_setter('state',         to_enum(ReactorState)),
+                    'warmup'           :   float_setter('warmup'           , 0.0, float('inf')),
+                  }
+
+  def __init__(self):
+    super().__init__()
+
+    self.max_energy_output =  50.0
+    self.warmup_time       = 200
+    self.shutdown_time     =  20
+
+    self.state           = ReactorState.off
+    self.warmup          =   0.0
+
+  def update(self):
+    super().update()
+    if self.state == ReactorState.warmup:
+      self.warmup   = clamp(self.warmup + 1.0 / self.warmup_time,   0.0, 1.0)
+      if self.warmup == 1.0:
+        self.state = ReactorState.on
+    if self.state == ReactorState.shutdown:
+      self.shutdown = clamp(self.warmup - 1.0 / self.shutdown_time, 0.0, 1.0)
+      if self.warmup == 0.0:
+        self.state = ReactorState.off
+
+  def available_energy(self):
+    return self.max_energy_output * self.warmup * (1.0 - self.damage)
+
+class ShipEnergyBank(ShipModule, EnergySink, EnergySource):
+  energy_sink_priority = 10
+  energy_source_priority = 50
+
+  def __init__(self):
+    super().__init__()
+
+    self.energy     =    0.0
+    self.max_energy = 1000.0
+
+  def required_energy(self):
+    return self.max_energy - self.energy
+
+  def consume_energy(self, energy):
+    self.energy = clamp(self.energy + energy, 0.0, self.max_energy)
+
+  def available_energy(self):
+    return self.energy
+
+  def produce_energy(self, energy):
+    self.energy = clamp(self.energy - energy, 0.0, self.max_energy)
+
 class WeaponState(Enum):
   idle   = 'idle'
   firing = 'firing'
 
-class ShipLaser(ShipModule):
-
+class ShipLaser(ShipModule, EnergySink):
   role = 'weapon'
 
   readable_attr = { 'power'      : limited_precision_float('power'      , 5),
@@ -92,7 +178,7 @@ class ShipLaser(ShipModule):
                     'max_energy' : limited_precision_float('max_energy' , 5),
                     'reload_rate': limited_precision_float('reload_rate', 5),
                     'target'     : lambda obj: obj.target.id if obj.target is not None else None,
-                    'state'      : lambda obj: obj.state.name,
+                    'state'      : lambda obj: obj.state.value,
                   }
 
   writable_attr = { 'power'      : float_setter('power'      , 0.0, float('inf')),
@@ -107,8 +193,7 @@ class ShipLaser(ShipModule):
                   }
 
   def __init__(self):
-    ShipModule.__init__(self)
-    Serializable.__init__(self)
+    super().__init__()
     self.power       =  20.0
     self.min_range   =  10.0
     self.max_range   = 200.0
@@ -120,26 +205,37 @@ class ShipLaser(ShipModule):
     self.target      =  None
     self.state       = WeaponState.idle
 
+  def can_fire_at(self, target):
+    diff_x = target.x - self._ship.x
+    diff_y = target.y - self._ship.y
+    r = hypot(diff_x, diff_y)
+    if self.min_range <= r <= self.max_range:
+      target_dir = atan2(diff_y, diff_x)
+      if target_dir < 0.0:
+        target_dir += 2*pi
+      weapon_dir = fmod(self._ship.direction + self.direction, 2*pi)
+      diff_dir = target_dir - weapon_dir
+      if diff_dir > pi:
+        diff_dir -= 2*pi
+      if abs(diff_dir) <= self.firing_arc * 0.5:
+        return True
+    return False
+
   def update(self):
-    self.energy = clamp(self.energy + self.reload_rate, 0, self.max_energy)
+    super().update()
     if self.energy == self.max_energy and self.state == WeaponState.firing and self.target is not None:
-      diff_x = self.target.x - self._ship.x
-      diff_y = self.target.y - self._ship.y
-      r = hypot(diff_x, diff_y)
-      if self.min_range <= r <= self.max_range:
-        target_dir = atan2(diff_y, diff_x)
-        if target_dir < 0.0:
-          target_dir += 2*pi
-        weapon_dir = fmod(self._ship.direction + self.direction, 2*pi)
-        diff_dir = target_dir - weapon_dir
-        if diff_dir > pi:
-          diff_dir -= 2*pi
-        if abs(diff_dir) <= self.firing_arc * 0.5:
-          dmg = self.power
-          self.target.do_dmg(dmg)
-          self.energy = 0.0
-          self.state = WeaponState.idle
-          self._ship.handle_event(LaserFiredEvent(self._ship, self.target, self._index))
+      if self.can_fire_at(self.target):
+        dmg = self.power
+        self.target.do_dmg(dmg)
+        self.energy = 0.0
+        self.state = WeaponState.idle
+        self._ship.handle_event(LaserFiredEvent(self._ship, self.target, self._index))
+
+  def required_energy(self):
+    return min(self.max_energy - self.energy, self.reload_rate)
+
+  def consume_energy(self, energy):
+    self.energy = clamp(self.energy + energy, 0.0, self.max_energy)
 
   def _apply_diff(self, diff):
     if 'target' in diff:
@@ -214,6 +310,8 @@ class Ship(Serializable):
 
     self.nodes   = []
     self.modules = {}
+    self.energy_sources = {}
+    self.energy_sinks   = {}
 
   def addNode(self, node):
     assert isinstance(node, ShipNode)
@@ -228,7 +326,16 @@ class Ship(Serializable):
     module._index = len(self.modules[module.role])
     module._ship  = self
     self.modules[module.role].append(module)
-    module.ship = self
+    if isinstance(module, EnergySource):
+      priority = module.energy_source_priority
+      if priority not in self.energy_sources:
+        self.energy_sources[priority] = []
+      self.energy_sources[priority].append(module)
+    if isinstance(module, EnergySink):
+      priority = module.energy_sink_priority
+      if priority not in self.energy_sinks:
+        self.energy_sinks[priority] = []
+      self.energy_sinks[priority].append(module)
 
   def calc_speed_x(self):
     return cos(self.trajectory) * self.speed
@@ -304,6 +411,31 @@ class Ship(Serializable):
       for module in modules:
         module.update()
 
+  def update_energy(self):
+    source_priorities = sorted(list(self.energy_sources.keys()), reverse=True)
+    available = [[m.available_energy() for m in self.energy_sources[p]] for p in source_priorities]
+    available_prio = [sum(ms) for ms in available]
+    total_available = sum(available_prio)
+
+    sink_priorities   = sorted(list(self.energy_sinks.keys()), reverse=True)
+    required = [[m.required_energy() for m in self.energy_sinks[p]] for p in sink_priorities]
+    required_prio = [sum(ms) for ms in required]
+    total_required = sum(required_prio)
+
+    for p_idx in range(len(available)):
+      consume_prio   = min(total_required, available_prio[p_idx])
+      total_required = max(total_required - consume_prio, 0.0)
+      ratio = 0.0 if available_prio[p_idx] == 0.0 else consume_prio / available_prio[p_idx]
+      for m_idx, m in enumerate(self.energy_sources[source_priorities[p_idx]]):
+        m.produce_energy(ratio * available[p_idx][m_idx])
+
+    for p_idx in range(len(required)):
+      consume_prio    = min(total_available, required_prio[p_idx])
+      total_available = max(total_available - consume_prio, 0.0)
+      ratio = 0.0 if required_prio[p_idx] == 0.0 else consume_prio / required_prio[p_idx]
+      for m_idx, m in enumerate(self.energy_sinks[sink_priorities[p_idx]]):
+        m.consume_energy(ratio * required[p_idx][m_idx])
+
   def update_state(self):
     hp, max_hp = fun.reduce(add_vec, map(lambda n: (n.hp, n.max_hp), self.nodes))
     if hp / max_hp < .20:
@@ -312,6 +444,7 @@ class Ship(Serializable):
 
   def update(self):
     self.update_modules()
+    self.update_energy()
     self.update_direction()
     self.update_speed()
     self.move(self.calc_speed_vector())
