@@ -131,7 +131,6 @@ def apply_diff(obj, diff, key=''):
             obj, val, k = func(obj, val, k)
     if hasattr(cls, '_apply_diff'):
       consumed = consumed.union(cls._apply_diff(obj, diff))
-  print(str(consumed))
   unconsumed_keys = set(diff.keys()).difference(consumed)
   if len(unconsumed_keys) > 0:
     raise ProtocolError(reason='Unconsumed keys: %s' % str(unconsumed_keys))

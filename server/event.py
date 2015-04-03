@@ -27,3 +27,12 @@ class DamageReceivedEvent(Event):
   def __init__(self, node, dmg):
     self.node = node
     self.dmg  = dmg
+
+class ShipDestroyedEvent(Event):
+  event_type = 'ship_destroyed'
+
+  readable_attr = { 'ship': lambda obj: obj.ship.id }
+
+  def __init__(self, ship):
+    self.ship = ship
+
