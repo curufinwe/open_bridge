@@ -1,5 +1,6 @@
 class AnotatedState < State
   attr_accessor :ids_to_bodies, :active_ship
+
   def initialize(*args)
     super(*args)
     @ids_to_bodies = {}
@@ -23,6 +24,7 @@ class AnotatedState < State
 
   def update_objects!()
     update_ships!()
+    delete_dead_bodies!
   end
 
   def update_ships!()
@@ -31,12 +33,12 @@ class AnotatedState < State
     end
   end
 
-  def delete_dead_bodies
-    dead_body_ids = @ids_to_bodies.delete_if do |id,body|
-       still_alive = get(%w{world ships}).include?(id) || get(%w{world bodies}).include?(id)
-       body.destroy unless still_alive
-       !still_alive
-      end
+  def delete_dead_bodies!
+    @ids_to_bodies.delete_if do |id,body|
+      still_alive = get(%w{world ships}).include?(id) || get(%w{world bodies}).include?(id)
+      body.destroy unless still_alive
+      !still_alive
+    end
   end
 
 end

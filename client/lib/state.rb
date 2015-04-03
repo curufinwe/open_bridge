@@ -37,12 +37,12 @@ class State
   def extract_events!(patch)
     if patch.include? "events"
       @events = patch["events"].values.compact
-      puts @events.inspect
       patch.delete("events")
     end
   end
 
   def apply(patch)
+    @events = []
     extract_events!(patch)
     changes, changed = @last_proposed_state.diff(@proposed_state)
     @connection.send_changes(changes) if changed
@@ -105,8 +105,10 @@ class Hash
 
   def apply(patch)
     patch.each_key do |key|
-      if self[key]
+      if self[key] && patch[key]
         self[key] = self[key].apply(patch[key])
+      elsif self[key]
+        self.delete key
       else
         self[key] = patch[key]
       end

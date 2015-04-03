@@ -44,15 +44,15 @@ class WeaponsInterface < Gui
       if !sprite.pixelPerfectClick
         sprite.pixelPerfectClick = true
         sprite.events.onInputDown.add {
-          self.clicked_obj(other_ship)
+          self.clicked_obj(body)
         }
       end
     end
   end
 
-  def clicked_obj(selected_ship)
+  def clicked_obj(selected_body)
     return unless active?
-    set_target(selected_ship)
+    set_target(selected_body)
   end
 
 
@@ -77,9 +77,9 @@ class WeaponsInterface < Gui
   end
 
 
-  def set_target(selected_ship)
-    @selected_ship = selected_ship
-    active_ship.set_state(["modules","weapon","0","target"],selected_ship.id)
+  def set_target(selected_body)
+    @selected_boy = selected_body
+    active_ship.set_state(["modules","weapon","0","target"],selected_body.id)
     active_ship.set_state(["modules","weapon","0","state"],"firing")
   end
 

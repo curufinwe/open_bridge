@@ -1,6 +1,6 @@
 class Body
 
-  attr_accessor :sprite, :state_path
+  attr_accessor :state_path
   attr_reader :id
 
   def initialize(state,id)
@@ -27,6 +27,12 @@ class Body
 
   def attackable?
     return false
+  end
+
+  def destroy
+    @id = nil
+    @state = nil
+    @state_path = nil
   end
 end
 

@@ -37,7 +37,7 @@ class BodyDisplay < Gui
   def remove_dead_sprites
     (Set.new(@bodies_to_sprites.keys)-@state.bodies).each do |body|
       @bodies_to_sprites[body].destroy
-      @bodies_to_sprites.delete body
+      @bodies_to_sprites.delete(body)
     end
   end
 
