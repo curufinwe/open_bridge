@@ -25,5 +25,4 @@ class DirectionDisplay < Gui
       @deg_indicators << deg
     end
   end
-
 end

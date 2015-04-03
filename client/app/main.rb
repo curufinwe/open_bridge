@@ -59,11 +59,11 @@ create = lambda{
       guis = guis.map{|klass| klass.new(game,state,input) }
       current_gui = select_interface(guis,0)
       position_index = 0
-      input.on("next_position"){ |type|
-        next if type == :up
-        position_index += 1; 
+      input.on("next_position") do |type| 
+        next if type == :up 
+        position_index += 1
         current_gui = select_interface(guis, position_index)
-      }
+      end
 }
 
 render = lambda{
@@ -71,8 +71,8 @@ render = lambda{
 }
 
 update = lambda do
-  state.active_ship = state.ids_to_ships["1"]
   state.update_objects!
+  state.active_ship = state.ids_to_bodies["1"]
   current_gui.update
   state.update
 end

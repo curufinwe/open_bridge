@@ -3,13 +3,17 @@ class Body
   attr_accessor :sprite, :state_path
   attr_reader :id
 
-  def initialize(game,state,id,info)
+  def initialize(state,id)
     @id = id
     @state = state
-    @sprite = game.add.sprite(info["x"],info["y"],info["sprite"])
-    @sprite.anchor.setTo(0.5,0.5)
     @state_path = ["world","bodies",@id]
-    game.physics.arcade.enable(@sprite)
+  end
+
+  def create_sprite(game,spritename)
+    sprite = game.add.sprite(state(:x),state(:y), spritename)
+    sprite.anchor.setTo(0.5,0.5)
+    game.physics.arcade.enable(sprite)
+    return sprite
   end
 
   def state(*names)
@@ -20,10 +24,14 @@ class Body
   def set_state( path, newval )
     @state.set(@state_path+[*path], newval)
   end
+
+  def attackable?
+    return false
+  end
 end
 
 class Ship < Body
-  def initialize(game,state,id,info)
+  def initialize(state,id)
     super
     @state_path = ["world","ships",@id]
   end
@@ -40,11 +48,15 @@ class Ship < Body
     state "modules", "weapon"
   end
 
-  def update
-    @sprite[:x] = state :x
-    @sprite[:y] = state :y
-    @sprite[:rotation] = state :direction
-    @sprite[:body][:velocity][:x] = state :dx
-    @sprite[:body][:velocity][:y] = state :dy
+  def update_sprite(sprite)
+    sprite[:x] = state :x
+    sprite[:y] = state :y
+    sprite[:rotation] = state :direction
+    sprite[:body][:velocity][:x] = state :dx
+    sprite[:body][:velocity][:y] = state :dy
+  end
+
+  def attackable?
+    return true
   end
 end
