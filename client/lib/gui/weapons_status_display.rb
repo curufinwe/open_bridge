@@ -1,5 +1,5 @@
-require 'gui'
-require 'bar'
+require 'gui/gui'
+require 'gui/bar'
 
 class WeaponsStatusDisplay < Gui
 

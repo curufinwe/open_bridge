@@ -1,4 +1,4 @@
-require 'gui'
+require 'gui/gui'
 
 class DegInfo
   attr_accessor :x, :y, :text
@@ -25,5 +25,4 @@ class DirectionDisplay < Gui
       @deg_indicators << deg
     end
   end
-
 end

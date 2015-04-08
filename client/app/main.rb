@@ -2,20 +2,20 @@ $DEBUG = false
 require 'opal'
 require 'native'
 require 'set'
-require "helpers.rb"
-require "jsmath.rb"
-require "text.rb"
-require "cone.rb"
-require "bar.rb"
-require "weapons_status_display.rb"
-require "input.rb"
-require "connect.rb"
-require "state.rb"
-require "annotated_state.rb"
-require "beam.rb"
-require "body.rb"
-require "weapons.rb"
-require "helm.rb"
+require "common/helpers.rb"
+require "gui/jsmath.rb"
+require "gui/text.rb"
+require "gui/cone.rb"
+require "gui/bar.rb"
+require "gui/weapons_status_display.rb"
+require "gui/input.rb"
+require "common/connect.rb"
+require "common/state.rb"
+require "gui/annotated_state.rb"
+require "gui/beam.rb"
+require "gui/body.rb"
+require "gui/weapons.rb"
+require "gui/helm.rb"
 require 'configs'
 
 def get_url_params
@@ -59,11 +59,11 @@ create = lambda{
       guis = guis.map{|klass| klass.new(game,state,input) }
       current_gui = select_interface(guis,0)
       position_index = 0
-      input.on("next_position"){ |type|
-        next if type == :up
-        position_index += 1; 
+      input.on("next_position") do |type| 
+        next if type == :up 
+        position_index += 1
         current_gui = select_interface(guis, position_index)
-      }
+      end
 }
 
 render = lambda{
@@ -71,8 +71,8 @@ render = lambda{
 }
 
 update = lambda do
-  state.active_ship = state.ids_to_ships["1"]
   state.update_objects!
+  state.active_ship = state.ids_to_bodies["1"]
   current_gui.update
   state.update
 end

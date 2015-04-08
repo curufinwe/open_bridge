@@ -1,7 +1,7 @@
-require 'gui'
-require 'cone_display'
-require 'beam_display'
-require 'weapons_status_display'
+require 'gui/gui'
+require 'gui/cone_display'
+require 'gui/beam_display'
+require 'gui/weapons_status_display'
 
 class WeaponsInterface < Gui
 
@@ -15,14 +15,15 @@ class WeaponsInterface < Gui
     add_display(ConeDisplay)
     add_display(WeaponsStatusDisplay)
     add_display(BeamDisplay)
+    @body_display = add_display(BodyDisplay)
   end
 
   def update
     next unless active? && active_ship
-    enable_clicks_for_targets!
+    update_displays
     update_camera
     update_weapons_ui_elements
-    update_displays
+    enable_clicks_for_targets!
   end
 
   def activate
@@ -36,25 +37,28 @@ class WeaponsInterface < Gui
   private
 
   def enable_clicks_for_targets!
-    @state.ids_to_ships.each_pair do |id,other_ship|
-      other_ship.sprite.inputEnabled = true
-      if !other_ship.sprite.pixelPerfectClick
-        other_ship.sprite.pixelPerfectClick = true
-        other_ship.sprite.events.onInputDown.add {
-          self.clicked_obj(other_ship)
+    @state.ids_to_bodies.each_pair do |id,body|
+      next unless body.attackable?
+      sprite = @body_display.bodies_to_sprites[body]
+      sprite.inputEnabled = true
+      if !sprite.pixelPerfectClick
+        sprite.pixelPerfectClick = true
+        sprite.events.onInputDown.add {
+          self.clicked_obj(body)
         }
       end
     end
   end
 
-  def clicked_obj(selected_ship)
-    set_target(selected_ship)
+  def clicked_obj(selected_body)
+    return unless active?
+    set_target(selected_body)
   end
 
 
   def update_camera
-    @game.camera.view.x = active_ship.sprite.x-400
-    @game.camera.view.y = active_ship.sprite.y-300
+    @game.camera.view.x = active_ship.x-400
+    @game.camera.view.y = active_ship.y-300
     @game.camera[:bounds]=`null`
   end
 
@@ -62,9 +66,9 @@ class WeaponsInterface < Gui
     mx,my = @game.input.activePointer.worldX, @game.input.activePointer.worldY
     @weapons_target.x=mx
     @weapons_target.y=my
-    if @selected_ship
+    if @selected_body
       @weapons_selected.visible = true
-      sx,sy = @selected_ship.sprite.x, @selected_ship.sprite.y
+      sx,sy = @selected_body.x, @selected_body.y
       @weapons_selected.x = sx
       @weapons_selected.y = sy
     else
@@ -73,9 +77,9 @@ class WeaponsInterface < Gui
   end
 
 
-  def set_target(selected_ship)
-    @selected_ship = selected_ship
-    active_ship.set_state(["modules","weapon","0","target"],selected_ship.id)
+  def set_target(selected_body)
+    @selected_body = selected_body
+    active_ship.set_state(["modules","weapon","0","target"],selected_body.id)
     active_ship.set_state(["modules","weapon","0","state"],"firing")
   end
 

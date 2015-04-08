@@ -1,5 +1,10 @@
+$opal_used = true if RUBY_ENGINE == "opal"
 def log(x)
+  if $opal_used
   `console.log(x)`
+  else
+    pp x
+  end
 end
 
 class Numeric
@@ -17,5 +22,9 @@ class Numeric
 end
 
 def after(time, &block) 
-  `setTimeout(block, time)`
+    if $opal_used
+      `setTimeout(block, time)`
+    else
+      raise "after not available outside of gui"
+    end
 end

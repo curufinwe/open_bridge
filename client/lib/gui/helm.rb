@@ -1,5 +1,8 @@
-require 'gui'
-require 'direction_display'
+require 'gui/gui'
+require 'gui/direction_display'
+require 'gui/cone_display'
+require 'gui/beam_display'
+require 'gui/body_display'
 
 class HelmInterface < Gui
   
@@ -11,6 +14,7 @@ class HelmInterface < Gui
     add_display(ConeDisplay)
     add_display(BeamDisplay)
     add_display(DirectionDisplay)
+    add_display(BodyDisplay)
   end
 
   def self.preload(game)
@@ -51,12 +55,12 @@ class HelmInterface < Gui
   def calc_mouse_pull_throttle
       @helm_target.visible = @game.input.activePointer.isDown
       mx,my = @game.input.activePointer.worldX, @game.input.activePointer.worldY
-      sx, sy = active_ship.sprite.x, active_ship.sprite.y
+      sx, sy = active_ship.x, active_ship.y
       @helm_target.x=mx
       @helm_target.y=my
       dirx, diry = mx-sx, my-sy
       angle = JSMath.atan2(dirx,diry)*JSMath::RadToDeg
-      shipa = active_ship.sprite[:rotation]*JSMath::RadToDeg
+      shipa = active_ship.state(:direction)*JSMath::RadToDeg
       adiff = angle-shipa
       adiff = JSMath.clamp_angle180(adiff)
       throttle_rot = (JSMath.clamp(-90, adiff, 90) / 90.0)
