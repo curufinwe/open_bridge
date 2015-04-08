@@ -1,25 +1,7 @@
 require 'json'
 
-if $opal_used
-  class Connector
-
+class Connector
     attr_accessor :state
-
-    def initialize(host)
-      log(host)
-      @changes = []
-      url = "ws://#{host}:9000"
-      @ws = Native(`new WebSocket(url)`)
-      @ws.onopen = -> {
-        @changes.each do |change|
-          send_changes(change)
-        end
-        @changes = nil
-      }
-      @ws.onmessage = lambda{|msg| self.onmsg(Native(msg)) }
-      @ws.onclose = -> { self.onclose; }
-      @ws.onerror = lambda{ self.onerror }
-    end
 
     def send_changes(changes)
       if @changes
@@ -27,6 +9,13 @@ if $opal_used
         return
       end
       @ws.send(JSON.dump(changes))
+    end
+
+    def onopen
+      @changes.each do |change|
+        send_changes(change)
+      end
+      @changes = nil
     end
 
     def onmsg(msg)
@@ -43,9 +32,5 @@ if $opal_used
       puts "error occured"
     end
 
-  end
-else
-  raise "way to go"
-  class Connector
-  end
 end
+
