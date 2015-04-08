@@ -356,6 +356,7 @@ class Ship(Serializable):
     self.throttle_speed    =  0.0
     self.throttle_rot      =  0.0
     self.desired_accel     =  0.0
+    self.desired_accel_dir =  0.0
     self.desired_rot_accel =  0.0
 
     self.max_speed         = 10.0
