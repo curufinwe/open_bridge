@@ -1,7 +1,7 @@
-require 'gui'
-require 'cone_display'
-require 'beam_display'
-require 'weapons_status_display'
+require 'gui/gui'
+require 'gui/cone_display'
+require 'gui/beam_display'
+require 'gui/weapons_status_display'
 
 class WeaponsInterface < Gui
 

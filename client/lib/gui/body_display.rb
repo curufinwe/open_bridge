@@ -1,4 +1,4 @@
-require 'gui'
+require 'gui/gui'
 require 'set'
 
 class BodyDisplay < Gui

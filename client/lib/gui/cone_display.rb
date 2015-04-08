@@ -1,4 +1,4 @@
-require 'gui'
+require 'gui/gui'
 
 class ConeDisplay < Gui
 

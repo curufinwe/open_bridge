@@ -1,8 +1,8 @@
-require 'gui'
-require 'direction_display'
-require 'cone_display'
-require 'beam_display'
-require 'body_display'
+require 'gui/gui'
+require 'gui/direction_display'
+require 'gui/cone_display'
+require 'gui/beam_display'
+require 'gui/body_display'
 
 class HelmInterface < Gui
   

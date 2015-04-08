@@ -23,7 +23,9 @@ class State
     @last_proposed_state = @proposed_state.deep_copy
     @blocks = []
     @events = []
-    `document.gamestate = self`
+    if $use_opal
+      `document.gamestate = self`
+    end
   end
 
   def update
