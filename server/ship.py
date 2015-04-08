@@ -141,8 +141,17 @@ class ShipReactor(ShipModule, EnergySource):
     return self.max_energy_output * self.warmup * (1.0 - self.damage)
 
 class ShipEnergyBank(ShipModule, EnergySink, EnergySource):
+  role = 'energy_bank'
   energy_sink_priority = 10
   energy_source_priority = 50
+
+  readable_attr = { 'max_energy': limited_precision_float('max_energy', 2),
+                    'energy'    : limited_precision_float('energy'    , 2),
+                  }
+
+  writable_attr = { 'max_energy': float_setter('max_energy', 0.0, float('inf')),
+                    'energy'    : float_setter('energy'    , 0.0, float('inf')),
+                  }
 
   def __init__(self):
     super().__init__()

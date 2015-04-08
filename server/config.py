@@ -22,10 +22,14 @@ def build_ship(smc, rmc):
   reactor.addNode(nodes[1])
   reactor.state = ReactorState.warmup
 
+  energybank = ShipEnergyBank()
+  energybank.addNode(nodes[1])
+
   ship.addModule(bridge)
   ship.addModule(engine)
   ship.addModule(laser)
   ship.addModule(reactor)
+  ship.addModule(energybank)
 
   if smc:
     smc = ShipSMC()
