@@ -81,8 +81,57 @@ class EnergySink:
   def consume_energy(self, energy):
     pass
 
-class ShipEngine(ShipModule):
+class ShipEngine(ShipModule, EnergySink):
   role = 'engine'
+
+  readable_attr = { 'max_energy_consumption_accel'     : limited_precision_float('max_energy_consumption_accel'    , 2),
+                    'max_energy_consumption_rot_accel' : limited_precision_float('max_energy_consumption_rot_accel', 2),
+                    'max_accel'                        : limited_precision_float('max_accel'                       , 5),
+                    'max_rot_accel'                    : limited_precision_float('max_rot_accel'                   , 5),
+                  }
+
+  writable_attr = { 'max_energy_consumption_accel'     : float_setter('max_energy_consumption_accel'     , 0.0, float('inf')                 ),
+                    'max_energy_consumption_rot_accel' : float_setter('max_energy_consumption_rot_accel' , 0.0, float('inf')                 ),
+                    'max_accel'                        : float_setter('max_accel'                        , 0.0, float('inf')                 ),
+                    'max_rot_accel'                    : float_setter('max_rot_accel'                    , 0.0, 2*pi        , open_right=True),
+                  }
+
+  def __init__(self):
+    super().__init__()
+    self.max_energy_consumption_accel     = 50.0
+    self.max_energy_consumption_rot_accel =  5.0
+    self.max_accel                        =  0.2
+    self.max_rot_accel                    =  0.01
+
+    self.accel                            =  0.0
+    self.rot_accel                        =  0.0
+    self.energy_consumption               =  0.0
+
+  def update(self):
+    super().update()
+
+  def required_energy(self):
+    # adjust max (rot_)accel for damage
+    max_accel               = self.max_accel     * (1.0 - self.damage)
+    max_rot_accel           = self.max_rot_accel * (1.0 - self.damage)
+    # compute (rot_)accel the engine can deliver
+    self.accel              = min(    self._ship.desired_accel     , max_accel)
+    self.rot_accel          = min(abs(self._ship.desired_rot_accel), max_rot_accel)
+    # the level the engine is performing at
+    perf_accel              = self.accel     / (max_accel     if max_accel     > 0.0 else 1.0)
+    perf_rot_accel          = self.rot_accel / (max_rot_accel if max_rot_accel > 0.0 else 1.0)
+    # adjust sign of rot_accel
+    self.rot_accel          = copysign(self.rot_accel, self._ship.desired_rot_accel)
+    # the required energy consumption
+    energy_accel            = self.max_energy_consumption_accel     * perf_accel
+    energy_rot_accel        = self.max_energy_consumption_rot_accel * perf_rot_accel
+    self.energy_consumption = energy_accel + energy_rot_accel
+    return self.energy_consumption
+
+  def consume_energy(self, energy):
+    scale = energy / (self.energy_consumption if self.energy_consumption > 0.0 else 1.0)
+    self.accel     *= scale
+    self.rot_accel *= scale
 
 class ShipBridge(ShipModule):
   role = 'bridge'
@@ -269,9 +318,7 @@ class Ship(Serializable):
                     'throttle_speed': limited_precision_float('throttle_speed', 5),
                     'throttle_rot'  : limited_precision_float('throttle_rot'  , 5),
                     'max_speed'     : limited_precision_float('max_speed'     , 5),
-                    'max_accel'     : limited_precision_float('max_accel'     , 5),
                     'max_rot'       : limited_precision_float('max_rot'       , 5),
-                    'max_rot_accel' : limited_precision_float('max_rot_accel' , 5),
                     'radius'        : limited_precision_float('radius'        , 5),
                     'modules'       : lambda obj: obj.serialize_modules()         ,
                     'nodes'         : lambda obj: obj.serialize_nodes()           ,
@@ -287,9 +334,7 @@ class Ship(Serializable):
                     'throttle_speed': float_setter('throttle_speed', -1.0         , 1.0                           ),
                     'throttle_rot'  : float_setter('throttle_rot'  , -1.0         , 1.0                           ),
                     'max_speed'     : float_setter('max_speed'     , 0.0          , float('inf')                  ),
-                    'max_accel'     : float_setter('max_accel'     , 0.0          , float('inf')                  ),
                     'max_rot'       : float_setter('max_rot'       , 0.0          , 2*pi         , open_right=True),
-                    'max_rot_accel' : float_setter('max_rot_accel' , 0.0          , 2*pi         , open_right=True),
                     'radius'        : float_setter('radius'        , 0.0          , float('inf')                  ),
                     'nodes'         : [ apply_to_list(name='nodes', func=None) ]
                   }
@@ -300,24 +345,24 @@ class Ship(Serializable):
     self._world   = None
 
     self.id = get_id()
-    self.x              =  0.0
-    self.y              =  0.0
-    self.direction      =  0.0
+    self.x                 =  0.0
+    self.y                 =  0.0
+    self.direction         =  0.0
 
-    self.speed          =  0.0
-    self.trajectory     =  0.0
-    self.rotation       =  0.0
+    self.speed             =  0.0
+    self.trajectory        =  0.0
+    self.rotation          =  0.0
 
-    self.throttle_speed =  0.0
-    self.throttle_rot   =  0.0
+    self.throttle_speed    =  0.0
+    self.throttle_rot      =  0.0
+    self.desired_accel     =  0.0
+    self.desired_rot_accel =  0.0
 
-    self.max_speed      = 10.0
-    self.max_accel      =  0.2
-    self.max_rot        =  0.1
-    self.max_rot_accel  =  0.01
-    self.radius         = 30.0
+    self.max_speed         = 10.0
+    self.max_rot           =  0.1
+    self.radius            = 30.0
 
-    self.state          = ShipState.operational
+    self.state             = ShipState.operational
 
     self.nodes   = []
     self.modules = dict((s, []) for s in self.module_update_order)
@@ -370,7 +415,7 @@ class Ship(Serializable):
     return 1.0
 
   def add_impulse(self, vec):
-    cur_vec  = to_vec(self.trajectory, self.speed)
+    cur_vec = to_vec(self.trajectory, self.speed)
     new_vec = add_vec(cur_vec, vec)
     self.trajectory = atan2(new_vec[1], new_vec[0])
     self.speed = hypot(*new_vec)
@@ -379,43 +424,33 @@ class Ship(Serializable):
     self.x += vector[0]
     self.y += vector[1]
 
-  def handle_event(self, evt):
-    self._world.handle_event(evt)
-
-  def update_direction(self):
-    if self.avg_dmg('rmc') < 1.0:
-      target_rotation = self.max_rot * self.throttle_rot
-      diff = clamp(target_rotation - self.rotation, -self.max_rot_accel, self.max_rot_accel)
-      self.rotation += diff
-    else:
-      self.rotation += self.max_rot_accel * self.throttle_rot
-    self.rotation = clamp(self.rotation, -self.max_rot, self.max_rot)
+  def rotate(self, rotation):
     self.direction += self.rotation
     self.direction = fmod(self.direction, 2*pi)
     if self.direction < 0.0:
       self.direction += 2*pi
 
-  def update_speed(self):
-    engine_performance = 1.0 - self.avg_dmg('engine')
-    max_accel = self.max_accel * engine_performance
+  def handle_event(self, evt):
+    self._world.handle_event(evt)
 
-    cur_vec  = to_vec(self.trajectory, self.speed)
-    if self.avg_dmg('smc') < 1.0:
-      target_speed = self.max_speed * self.throttle_speed
-      target_vec = to_vec(self.direction, target_speed)
-      diff_vec = sub_vec(target_vec, cur_vec)
-      l = hypot(*diff_vec)
-      if l > 0.0:
-        scale = clamp(l, 0, max_accel) / l
-      else:
-        scale = 0.0
-      diff_vec = mul_vec(diff_vec, scale)
+  def update_desired_rot_accel(self):
+    if self.avg_dmg('rmc') < 1.0:
+      self.desired_rot_accel = self.max_rot * self.throttle_rot - self.rotation
     else:
-      diff_vec = to_vec(self.direction,  max_accel * self.throttle_speed)
+      self.desired_rot_accel = self.throttle_rot * sum(m.max_rot_accel for m in self.modules['engine'])
 
-    new_vec = add_vec(cur_vec, diff_vec)
-    self.trajectory = atan2(new_vec[1], new_vec[0])
-    self.speed = hypot(*new_vec)
+  def update_desired_accel_dir(self):
+    if self.avg_dmg('smc') < 1.0:
+      cur_vec                = to_vec(self.trajectory, self.speed)
+      target_speed           = self.max_speed * self.throttle_speed
+      target_vec             = to_vec(self.direction, target_speed)
+      diff_vec               = sub_vec(target_vec, cur_vec)
+      self.desired_accel_dir = atan2(diff_vec[1], diff_vec[0])
+      self.desired_accel     = hypot(*diff_vec)
+    else:
+      max_accel              = sum(m.max_accel for m in self.modules['engine'])
+      self.desired_accel     = max_accel * self.throttle_speed
+      self.desired_accel_dir = self.direction
 
   def update_modules(self):
     for role in self.module_update_order:
@@ -453,11 +488,34 @@ class Ship(Serializable):
       self.state = ShipState.destroyed
       self.handle_event(ShipDestroyedEvent(self))
 
+  def update_rotation(self):
+    rot_accel = sum(m.rot_accel for m in self.modules['engine'])
+    self.rotation = clamp(self.rotation + rot_accel, -self.max_rot, self.max_rot)
+
+  def update_speed(self):
+    accel    = sum(m.accel for m in self.modules['engine'])
+    cur_vec  = self.calc_speed_vector()
+    diff_vec = to_vec(self.desired_accel_dir, accel)
+    new_vec  = add_vec(cur_vec, diff_vec)
+
+    self.trajectory = atan2(new_vec[1], new_vec[0])
+    self.speed      = clamp(hypot(*new_vec), 0.0, self.max_speed)
+
   def update(self):
+    """ Update loop for a single ship:
+          - Update desired (rot_)accel and accel_dir
+          - Update module state
+          - Update energy levels (modules consume/produce energy here)
+          - Update rotation/speed
+          - rotate/move the ship
+    """
+    self.update_desired_rot_accel()
+    self.update_desired_accel_dir()
     self.update_modules()
     self.update_energy()
-    self.update_direction()
+    self.update_rotation()
     self.update_speed()
+    self.rotate(self.rotation)
     self.move(self.calc_speed_vector())
 
   def _apply_diff(self, diff):
