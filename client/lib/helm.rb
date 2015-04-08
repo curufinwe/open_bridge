@@ -55,7 +55,7 @@ class HelmInterface < Gui
   def calc_mouse_pull_throttle
       @helm_target.visible = @game.input.activePointer.isDown
       mx,my = @game.input.activePointer.worldX, @game.input.activePointer.worldY
-      sx, sy = active_ship.state(:x), active_ship.state(:y)
+      sx, sy = active_ship.x, active_ship.y
       @helm_target.x=mx
       @helm_target.y=my
       dirx, diry = mx-sx, my-sy

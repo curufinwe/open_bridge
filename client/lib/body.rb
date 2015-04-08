@@ -10,7 +10,7 @@ class Body
   end
 
   def create_sprite(game,spritename)
-    sprite = game.add.sprite(state(:x),state(:y), spritename)
+    sprite = game.add.sprite(self.x,self.y, spritename)
     sprite.anchor.setTo(0.5,0.5)
     game.physics.arcade.enable(sprite)
     return sprite
@@ -46,7 +46,7 @@ class Ship < Body
   end
 
   def pos
-    return [ state(:x), state(:y) ]
+    return [ self.x, self.y ]
   end
 
   def rot
