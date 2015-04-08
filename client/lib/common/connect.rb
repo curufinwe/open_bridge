@@ -28,8 +28,8 @@ class Connector
       puts "connection closed"
     end
 
-    def onerror()
-      puts "error occured"
+    def onerror(e="")
+      puts "error occured: #{e}"
     end
 
 end

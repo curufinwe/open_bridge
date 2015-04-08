@@ -54,7 +54,7 @@ create = lambda{
       $configs.keymappings.each_pair{ |name, key| input.key(name,key) }
       `game.native.physics.startSystem(Phaser.Physics.ARCADE)`
       connect = Connector.new(get_url_params["host"] || "127.0.0.1")
-      state = AnotatedState.new(game,connect)
+      state = AnotatedState.new(connect)
       connect.state = state
       guis = guis.map{|klass| klass.new(game,state,input) }
       current_gui = select_interface(guis,0)
