@@ -294,6 +294,8 @@ class Ship(Serializable):
                     'nodes'         : [ apply_to_list(name='nodes', func=None) ]
                   }
 
+  module_update_order = ('bridge', 'rmc', 'smc', 'reactor', 'energy_bank', 'weapon', 'engine')
+
   def __init__(self):
     self._world   = None
 
@@ -318,7 +320,7 @@ class Ship(Serializable):
     self.state          = ShipState.operational
 
     self.nodes   = []
-    self.modules = {}
+    self.modules = dict((s, []) for s in self.module_update_order)
     self.energy_sources = {}
     self.energy_sinks   = {}
 
@@ -360,7 +362,7 @@ class Ship(Serializable):
     self.nodes[n].do_dmg(dmg)
 
   def avg_dmg(self, role):
-    if role in self.modules:
+    if role in self.modules and len(self.modules[role]) > 0:
       s = 0.0
       for m in self.modules[role]:
         s += m.damage
@@ -416,8 +418,8 @@ class Ship(Serializable):
     self.speed = hypot(*new_vec)
 
   def update_modules(self):
-    for modules in self.modules.values():
-      for module in modules:
+    for role in self.module_update_order:
+      for module in self.modules[role]:
         module.update()
 
   def update_energy(self):
