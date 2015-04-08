@@ -34,6 +34,9 @@ class Body
     @state = nil
     @state_path = nil
   end
+
+  def x; state :x; end
+  def y; state :y; end
 end
 
 class Ship < Body
@@ -55,8 +58,8 @@ class Ship < Body
   end
 
   def update_sprite(sprite)
-    sprite[:x] = state :x
-    sprite[:y] = state :y
+    sprite[:x] = self.x
+    sprite[:y] = self.y
     sprite[:rotation] = state :direction
     sprite[:body][:velocity][:x] = state :dx
     sprite[:body][:velocity][:y] = state :dy

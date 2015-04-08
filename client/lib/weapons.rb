@@ -57,8 +57,8 @@ class WeaponsInterface < Gui
 
 
   def update_camera
-    @game.camera.view.x = active_ship.state(:x)-400
-    @game.camera.view.y = active_ship.state(:y)-300
+    @game.camera.view.x = active_ship.x-400
+    @game.camera.view.y = active_ship.y-300
     @game.camera[:bounds]=`null`
   end
 
@@ -66,9 +66,9 @@ class WeaponsInterface < Gui
     mx,my = @game.input.activePointer.worldX, @game.input.activePointer.worldY
     @weapons_target.x=mx
     @weapons_target.y=my
-    if @selected_ship
+    if @selected_body
       @weapons_selected.visible = true
-      sx,sy = @selected_ship.sprite.x, @selected_ship.sprite.y
+      sx,sy = @selected_body.x, @selected_body.y
       @weapons_selected.x = sx
       @weapons_selected.y = sy
     else
@@ -78,7 +78,7 @@ class WeaponsInterface < Gui
 
 
   def set_target(selected_body)
-    @selected_boy = selected_body
+    @selected_body = selected_body
     active_ship.set_state(["modules","weapon","0","target"],selected_body.id)
     active_ship.set_state(["modules","weapon","0","state"],"firing")
   end
