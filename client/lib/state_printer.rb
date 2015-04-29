@@ -1,13 +1,13 @@
 require_relative 'common/connect_mri.rb'
-require_relative 'common/state.rb'
+require_relative 'common/state_fast.rb'
 require 'pp'
 
-con = Connector.new
-state = State.new(con)
-con.state = state
+state = State.new()
+con = Connector.new(state)
+
 loop do 
-  state.update
+  con.send_state_update
   system("clear")
-  pp state.authoritive
+  pp state.authoritative
   sleep 1
 end

@@ -4,10 +4,7 @@ class Connector
     attr_accessor :state
 
     def send_changes(changes)
-      if @changes
-        @changes << changes
-        return
-      end
+      return @changes << changes if @changes
       @ws.send(JSON.dump(changes))
     end
 
@@ -18,10 +15,21 @@ class Connector
       @changes = nil
     end
 
+    def send_state_update
+      diff = @state.diff
+      return if diff == {}
+      send_changes(@state.diff)
+      @state.promote_diff_to_proposed
+    end
+
     def onmsg(msg)
       data = msg.data
       json = JSON.parse(data)
-      @state.apply(json)
+      diff = @state.diff
+      @state.reset_diff 
+      @state.reset_proposed
+      @state.apply_patch(json)
+      send_changes(diff) if diff != {}
     end
 
     def onclose()

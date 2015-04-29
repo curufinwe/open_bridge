@@ -14,7 +14,7 @@ class WeaponsStatusDisplay < Gui
   end
 
   def activate
-    update_ship
+    update_ship if active_ship
   end
 
   def deactivate
