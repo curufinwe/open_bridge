@@ -6,12 +6,17 @@ class AnotatedState < State
     @ids_to_bodies = {}
   end
 
+  def events
+    get(["events"])
+  end
+
   def update
     super
   end
 
   def ships
-    get(%w{world ships}).each_key.map{|id| @ids_to_bodies[id]}
+    ships = get(%w{world ships}, {})
+    return ships.each_key.map{|id| @ids_to_bodies[id]}
   end
 
   def bodies
@@ -28,7 +33,7 @@ class AnotatedState < State
   end
 
   def update_ships!()
-    get(%w{world ships}).each_key do |id|
+    get(%w{world ships},{}).each_key do |id|
       @ids_to_bodies[id] ||= Ship.new(self, id)
     end
   end

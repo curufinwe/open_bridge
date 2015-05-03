@@ -1,25 +1,13 @@
-require 'websocket-client-simple'
-require 'json'
+require_relative 'common/connect_mri.rb'
+require_relative 'common/state_fast.rb'
 require 'pp'
 
-ws = WebSocket::Client::Simple.connect 'ws://localhost:9000'
+state = State.new()
+con = Connector.new(state)
 
-ws.on :message do |msg|
-  state = JSON.parse(msg.data)
-  pp state
-  exit
+loop do 
+  con.send_state_update
+  system("clear")
+  pp state.authoritative
+  sleep 1
 end
-
-ws.on :open do
-end
-
-ws.on :close do |e|
-  p e
-  exit 1
-end
-
-ws.on :error do |e|
-  p e
-end
-
-sleep 1

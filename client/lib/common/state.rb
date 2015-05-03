@@ -15,8 +15,7 @@ class State
     @proposed_state
   end
 
-  def initialize(game,connection)
-    @game = game
+  def initialize(connection)
     @connection = connection
     @authoritive_state = initial_state
     @proposed_state = @authoritive_state.deep_copy

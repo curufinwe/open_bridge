@@ -91,6 +91,7 @@ class ConeDisplay < Gui
       cone.transparency = 0.1
     end
     cone.update
+    nil
   end
 
   def destroy
