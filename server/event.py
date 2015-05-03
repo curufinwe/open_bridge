@@ -7,8 +7,8 @@ class Event(Serializable):
 class LaserFiredEvent(Event):
   event_type = 'laser_fired'
 
-  readable_attr = { 'source': lambda obj: obj.source.id,
-                    'target': lambda obj: obj.target.id,
+  readable_attr = { 'source': lambda client, obj: obj.source.id,
+                    'target': lambda client, obj: obj.target.id,
                     'idx'   : get_attr('idx')
                   }
 
@@ -20,8 +20,8 @@ class LaserFiredEvent(Event):
 class DamageReceivedEvent(Event):
   event_type = 'damage_received'
 
-  readable_attr = { 'ship': lambda obj: obj.node._ship.id,
-                    'node': lambda obj: obj.node._index,
+  readable_attr = { 'ship': lambda client, obj: obj.node._ship.id,
+                    'node': lambda client, obj: obj.node._index,
                     'dmg' : get_attr('dmg')                }
 
   def __init__(self, node, dmg):
@@ -31,7 +31,7 @@ class DamageReceivedEvent(Event):
 class ShipDestroyedEvent(Event):
   event_type = 'ship_destroyed'
 
-  readable_attr = { 'ship': lambda obj: obj.ship.id }
+  readable_attr = { 'ship': lambda client, obj: obj.ship.id }
 
   def __init__(self, ship):
     self.ship = ship

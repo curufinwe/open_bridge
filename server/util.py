@@ -1,10 +1,11 @@
 import math
 
-id = 0
+next_id = 0
 def get_id():
-  global id
-  id += 1
-  return id
+  global next_id
+  result = next_id
+  next_id += 1
+  return 's%d' % result
 
 DEG2RAD = math.pi / 180.0
 RAD2DEG = 180.0 / math.pi

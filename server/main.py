@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 
 import asyncio
+import cProfile
+import pstats
+import sys
 
 from autobahn.asyncio.websocket import WebSocketServerFactory
 
 from game import Game, GameClient
 from config import init_game
 
-if __name__ == '__main__':
+def main():
   game = Game()
   init_game(game)
   game.run()
@@ -25,3 +28,14 @@ if __name__ == '__main__':
   finally:
     server.close()
     loop.close()
+
+if __name__ == '__main__':
+  profile = False
+  if len(sys.argv) > 1 and sys.argv[1] == '--profile':
+    pr = cProfile.Profile()
+    pr.run('main()')
+    pr.create_stats()
+    stats = pstats.Stats(pr)
+    stats.strip_dirs().sort_stats('tottime').print_stats(30)
+  else:
+    main()

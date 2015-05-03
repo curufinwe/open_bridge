@@ -1,6 +1,6 @@
 from math import *
 
-from protocol import ProtocolError
+from protocol import ProtocolError, DiffOp, calc_dict_diff
 from ship import Ship, ShipState
 from util import clamp
 from vector import *
@@ -22,27 +22,23 @@ class World:
   def __init__(self, game):
     self.game = game
     self.sector_size = 900.0
-    self.ships       = []
-    self.bodies      = []
+    self.ships       = {}
+    self.bodies      = {}
 
   def addShip(self, ship):
     ship._world = self
-    self.ships.append(ship)
-
-  def getShipById(self, id):
-    for s in self.ships:
-      if s.id == id:
-        return s
-    return None
+    self.ships[ship.id] = ship
+    return ship.id
 
   def handle_event(self, evt):
     self.game.handle_event(evt)
 
   def detect_collision(self):
-    for idx_a in range(len(self.ships)):
-      ship_a = self.ships[idx_a]
-      for idx_b in range(idx_a + 1, len(self.ships)):
-        ship_b = self.ships[idx_b]
+    ship_ids = list(self.ships.keys())
+    for idx_a in range(len(ship_ids)):
+      ship_a = self.ships[ship_ids[idx_a]]
+      for idx_b in range(idx_a + 1, len(ship_ids)):
+        ship_b = self.ships[ship_ids[idx_b]]
         diff = (ship_a.x - ship_b.x, ship_a.y - ship_b.y)
         dist = hypot(*diff)
         min_dist = ship_a.radius + ship_b.radius
@@ -53,7 +49,7 @@ class World:
           ship_b.add_impulse(mul_vec(diff, -force / dist))
 
   def update(self):
-    for s in self.ships:
+    for s in self.ships.values():
       s.update()
       enforce_boundary(self.sector_size, s)
     for b in self.bodies:
@@ -62,13 +58,13 @@ class World:
     self.detect_collision()
 
     ships_to_del = []
-    for s_idx, s in enumerate(self.ships):
+    for s_id, s in self.ships.items():
       s.update_state()
       if s.state == ShipState.destroyed:
-        ships_to_del.append(s_idx)
+        ships_to_del.append(s_id)
     ships_to_del.reverse()
-    for s_idx in ships_to_del:
-      del self.ships[s_idx]
+    for s_id in ships_to_del:
+      del self.ships[s_id]
 
   def apply_diff(self, diff):
     if 'ships' in diff:
@@ -76,19 +72,29 @@ class World:
         raise ProtocolError(reason='Ship diffs should be an object')
 
       for key, val in diff['ships'].items():
-        try:
-          key = int(key)
-        except:
-          raise ProtocolError('ship id is not an int but "%s"' % key)
-        idx = find_obj_by_id(self.ships, key)
-        if idx is None:
-          raise ProtocolError(reason='Invalid id for a ship: %d' % key)
+        if key not in self.ships:
+          raise ProtocolError(reason='Invalid id for a ship: %s' % key)
         elif val is None:
-          del self.ships[idx]
+          del self.ships[key]
         else:
-          self.ships[idx].apply_diff(val)
+          self.ships[key].apply_diff(val)
 
-  def serialize(self):
-    return { 'sector_size': self.sector_size,
-             'ships'      : dict((s.id, s.serialize()) for s in self.ships),
-             'bodies'     : dict((b.id, b.serialize()) for b in self.bodies) }
+  def calc_diff(self, client, state):
+    result = {}
+
+    if state is None:
+      state = {}
+
+    if 'sector_size' not in state or state['sector_size'] != self.sector_size:
+      result['sector_size'] = self.sector_size
+
+    s_diff = calc_dict_diff(client, self.ships, state['ships'] if 'ships' in state else {})
+    if s_diff == DiffOp.IGNORE:
+      pass
+    elif s_diff == DiffOp.DELETE:
+      result['ships'] = None
+    else:
+      result['ships'] = s_diff
+
+    return result if len(result) > 0 else DiffOp.IGNORE
+

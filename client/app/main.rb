@@ -71,7 +71,7 @@ render = lambda{
 
 update = lambda do
   state.update_objects!
-  state.active_ship = state.ids_to_bodies["1"]
+  state.active_ship = state.ids_to_bodies["s0"]
   current_gui.update
   connect.send_state_update
 end
