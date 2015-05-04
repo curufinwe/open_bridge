@@ -18,7 +18,7 @@ class State
   end
 
 
-  def get(path,default = nil)
+  def get(path, default = nil)
     res = get_and_merge(path, default)
     #puts "#{path.inspect} with default: #{default.inspect}: #{res.inspect}"
     return res

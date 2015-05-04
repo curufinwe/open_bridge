@@ -66,7 +66,7 @@ class WeaponsInterface < Gui
     mx,my = @game.input.activePointer.worldX, @game.input.activePointer.worldY
     @weapons_target.x=mx
     @weapons_target.y=my
-    if @selected_body
+    if @selected_body && @selected_body.alive?
       @weapons_selected.visible = true
       sx,sy = @selected_body.x, @selected_body.y
       @weapons_selected.x = sx

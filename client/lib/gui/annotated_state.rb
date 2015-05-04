@@ -40,8 +40,8 @@ class AnotatedState < State
 
   def delete_dead_bodies!
     @ids_to_bodies.delete_if do |id,body|
-      still_alive = get(%w{world ships}).include?(id) || get(%w{world bodies}).include?(id)
-      body.destroy unless still_alive
+      still_alive = get(%w{world ships}, {}).include?(id) || get(%w{world bodies}, {}).include?(id)
+      body.destroy unless still_alive #I'm making a note here
       !still_alive
     end
   end

@@ -13,7 +13,7 @@ class BeamDisplay < Gui
   end
 
   def update
-    @state.events.each do |evnt|
+    @state.events.each_value do |evnt|
       if evnt["type"] == "laser_fired"
         toid = evnt["target"].to_s
         fromid = evnt["source"].to_s

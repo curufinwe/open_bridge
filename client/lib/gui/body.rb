@@ -7,6 +7,7 @@ class Body
     @id = id
     @state = state
     @state_path = ["world","bodies",@id]
+    @alive = true
   end
 
   def create_sprite(game,spritename)
@@ -33,10 +34,15 @@ class Body
     @id = nil
     @state = nil
     @state_path = nil
+    @alive = false
   end
 
   def x; state :x; end
   def y; state :y; end
+
+  def alive?
+    return @alive
+  end
 end
 
 class Ship < Body
