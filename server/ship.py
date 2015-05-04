@@ -106,9 +106,18 @@ class Ship(Serializable):
   def calc_speed_vector(self):
     return (self.calc_speed_x(), self.calc_speed_y())
 
-  def do_dmg(self, dmg):
-    n = random.randrange(len(self.nodes))
-    self.nodes[n].do_dmg(dmg)
+  def do_damage(self, damage, direction):
+    source_dist = max(hypot(n.x, n.y) for n in self.nodes) + 10.0
+    source = (cos(direction) * source_dist, sin(direction) * source_dist)
+    sorted_nodes = sorted(self.nodes, key=lambda n: hypot(*sub_vec((n.x, n.y), source)))
+    for n in sorted_nodes:
+      if n.hp > 0 and random.uniform(0., 1.) < .9:
+        n.do_damage(damage)
+        break
+    else:
+      for n in sorted_nodes:
+        if n.hp > 0:
+          n.do_damage(damage)
 
   def avg_dmg(self, role):
     if role in self.modules and len(self.modules[role]) > 0:

@@ -16,5 +16,11 @@ def deg2rad(a):
 def rad2deg(r):
   return r * RAD2DEG
 
+def angle_diff(a, b):
+  diff = abs(math.fmod(a - b, 2*math.pi))
+  if diff > math.pi:
+    diff -= math.pi
+  return diff
+
 clamp = lambda val, low, high: max(low, min(high, val))
 

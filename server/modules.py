@@ -27,11 +27,15 @@ class ShipNode(Serializable):
     self.hp     = 100.0
     self.max_hp = 100.0
 
-  def do_dmg(self, dmg):
+  def do_damage(self, damage):
     self.old_hp = self.hp
-    self.hp = clamp(self.hp - dmg, 0, self.max_hp)
-    effective_dmg = self.old_hp - self.hp
-    self._ship.handle_event(DamageReceivedEvent(self, effective_dmg))
+    self.hp = clamp(self.hp - damage, 0, self.max_hp)
+    effective_damage = self.old_hp - self.hp
+    self._ship.handle_event(DamageReceivedEvent(self, effective_damage))
+
+  def _apply_diff(self, diff):
+    if 'x' in diff or 'y' in diff:
+      self.update_angle()
 
 class ShipModule(Serializable):
   role = ''
@@ -62,29 +66,6 @@ class ShipModule(Serializable):
   def _calc_diff(self, client, state):
     diff =  calc_list_diff(client, [n._index for n in self.nodes], state.get('nodes', None))
     return { 'nodes': diff } if diff != DiffOp.IGNORE else DiffOp.IGNORE
-  #  result = {}
-  #  if state is None:
-  #    state = {}
-
-  #  if 'nodes' not in state:
-  #    state['nodes'] = {}
-
-  #  l = len(self.nodes)
-  #  for k in state['nodes']:
-  #    if type(k) != int or k < 0 or k >= l:
-  #      result[k] = DiffOp.DELETE
-
-  #  for i in range(l):
-  #    if i not in state['nodes']:
-  #      if 'nodes' not in result:
-  #        result['nodes'] = {}
-  #      result['nodes'][i] = 1
-
-  #  cur_val = round(self.damage, 5)
-  #  if 'damage' not in state or state['damage'] != cur_val:
-  #    result['damage'] = cur_val
-
-  #  return result if len(result) > 0 else DiffOp.IGNORE
 
 class EnergySource:
   energy_source_priority = 100
@@ -306,8 +287,9 @@ class ShipLaser(ShipModule, EnergySink):
     super().update()
     if self.energy == self.max_energy and self.state == WeaponState.firing and self.target is not None:
       if self.can_fire_at(self.target):
-        dmg = self.power
-        self.target.do_dmg(dmg)
+        damage = self.power
+        direction = atan2(self._ship.y - self.target.y, self._ship.x - self.target.x)
+        self.target.do_damage(damage, direction)
         self.energy = 0.0
         self.state = WeaponState.idle
         self._ship.handle_event(LaserFiredEvent(self._ship, self.target, self._index))
