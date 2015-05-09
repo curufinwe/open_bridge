@@ -309,3 +309,90 @@ class ShipLaser(ShipModule, EnergySink):
         raise ProtocolError(reason='Invalid target id: %s' % ship_id)
     return set(['target'])
 
+class ShieldState(Enum):
+  disabled = 'disabled'
+  enabled  = 'enabled'
+
+class ShipShield(ShipModule, EnergySink):
+  role = 'shield'
+
+  readable_attr = { 'base_energy_consumption': limited_precision_float('base_energy_consumption', 5),
+                    'recharge_rate'          : limited_precision_float('recharge_rate'          , 5),
+                    'recharge_efficiency'    : limited_precision_float('recharge_efficiency'    , 5),
+                    'regen_rate'             : limited_precision_float('regen_rate'             , 5),
+                    'regen_efficiency'       : limited_precision_float('regen_efficiency'       , 5),
+                    'design_capacity'        : limited_precision_float('design_capacity'        , 5),
+                    'direction'              : limited_precision_float('direction'              , 5),
+                    'arc'                    : limited_precision_float('arc'                    , 5),
+                    'strength_limit'         : limited_precision_float('strength_limit'         , 5),
+                    'strength'               : limited_precision_float('strength'               , 5),
+                    'state'                  : lambda client, obj: obj.state.value,
+                  }
+
+  writable_attr = { 'base_energy_consumption': float_setter('base_energy_consumption', 0.0, float('inf')),
+                    'recharge_rate'          : float_setter('recharge_rate'          , 0.0, float('inf')),
+                    'recharge_efficiency'    : float_setter('recharge_efficiency'    , 0.0, float('inf')),
+                    'regen_rate'             : float_setter('regen_rate'             , 0.0, float('inf')),
+                    'regen_efficiency'       : float_setter('regen_efficiency'       , 0.0, float('inf')),
+                    'design_capacity'        : float_setter('design_capacity'        , 0.0, float('inf')),
+                    'arc'                    : float_setter('arc'                    , 0.0,       2 * pi, open_right=True),
+                    'strength_limit'         : float_setter('strength_limit'         , 0.0, float('inf')),
+                    'strength'               : float_setter('strength'               , 0.0, float('inf')),
+                    'state'                  : generic_setter('state', to_enum(ShieldState)) ,
+                  }
+
+  def __init__(self):
+    super().__init__()
+
+    self.base_energy_consumption =  00.0
+    self.recharge_rate           =   1.0
+    self.recharge_efficiency     =   1.0
+    self.regen_rate              =   0.1
+    self.regen_efficiency        =   0.05
+    self.design_capacity         = 100.0
+    self.direction               =   0.0
+    self.arc                     = deg2rad(180.)
+
+    self.strength_limit          = self.design_capacity
+    self.strength                =   0.0
+    self.state                   = ShieldState.enabled
+
+  def update(self):
+    super().update()
+
+    if self.damage > .25:
+      self.disable()
+
+  def required_energy(self):
+    if self.state == ShieldState.disabled:
+      return 0.0
+    regen_energy    = min(self.regen_rate   , (self.design_capacity - self.strength_limit) / self.regen_efficiency)
+    max_regen       = regen_energy * self.regen_efficiency
+    recharge_energy = min(self.recharge_rate, (self.strength_limit + max_regen - self.strength) / self.recharge_efficiency)
+    return self.base_energy_consumption + max(0.0, regen_energy + recharge_energy)
+
+  def consume_energy(self, energy):
+    bec = self.base_energy_consumption * (1.0 - self.damage)
+    if energy < bec:
+      self.disable()
+    else:
+      energy -= bec
+
+    energy_per_charge   = 1.0 / self.recharge_efficiency
+    energy_per_regen    = 1.0 / self.regen_efficiency
+    scaling_factor      = 1.0 / (energy_per_charge + energy_per_regen)
+
+    charge_energy       = min(energy, (self.strength_limit - self.strength) / self.recharge_efficiency)
+    energy             -= charge_energy
+    charge_energy      += energy * energy_per_charge * scaling_factor
+    self.strength_limit = min(self.design_capacity, self.strength_limit + energy * scaling_factor)
+    self.strength       = min(self.strength_limit , self.strength + charge_energy * self.recharge_efficiency)
+
+  def do_damage(self, damage):
+    eff_dmg = min(self.strength, damage)
+    self.strength -= eff_dmg
+    return damage - eff_dmg
+
+  def disable(self):
+    self.state    = ShieldState.disabled
+    self.strength = 0.0
