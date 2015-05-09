@@ -67,17 +67,20 @@ class World:
       del self.ships[s_id]
 
   def apply_diff(self, diff):
-    if 'ships' in diff:
-      if type(diff['ships']) != dict:
-        raise ProtocolError(reason='Ship diffs should be an object')
+    for key in diff:
+      if key == 'ships':
+        if type(diff['ships']) != dict:
+          raise ProtocolError(reason='Ship diffs should be an object')
 
-      for key, val in diff['ships'].items():
-        if key not in self.ships:
-          raise ProtocolError(reason='Invalid id for a ship: %s' % key)
-        elif val is None:
-          del self.ships[key]
-        else:
-          self.ships[key].apply_diff(val)
+        for key, val in diff['ships'].items():
+          if key not in self.ships:
+            raise ProtocolError(reason='Invalid id for a ship: %s' % key)
+          elif val is None:
+            del self.ships[key]
+          else:
+            self.ships[key].apply_diff(val)
+      else:
+        raise ProtocolError(reason='Unknown key "%s" in world' % key)
 
   def calc_diff(self, client, state):
     result = {}

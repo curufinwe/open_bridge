@@ -43,6 +43,10 @@ def minimal_ship(smc=True, rmc=True):
   energybank.addNode(nodes[4])
   ship.addModule(energybank)
 
+  shield = ShipShield()
+  shield.addNode(nodes[4])
+  ship.addModule(shield)
+
   return ship
 
 ship_templates = { 'debug_ship_1': minimal_ship,

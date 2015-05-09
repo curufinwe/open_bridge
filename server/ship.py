@@ -42,7 +42,7 @@ class Ship(Serializable):
                     'nodes'         : [ apply_to_list(name='nodes', func=None) ]
                   }
 
-  module_update_order = ('bridge', 'rmc', 'smc', 'reactor', 'energy_bank', 'weapon', 'engine')
+  module_update_order = ('bridge', 'rmc', 'smc', 'reactor', 'energy_bank', 'weapon', 'engine', 'shield')
 
   def __init__(self):
     self._world   = None
@@ -106,9 +106,30 @@ class Ship(Serializable):
   def calc_speed_vector(self):
     return (self.calc_speed_x(), self.calc_speed_y())
 
-  def do_dmg(self, dmg):
-    n = random.randrange(len(self.nodes))
-    self.nodes[n].do_dmg(dmg)
+  def do_shield_damage(self, damage, direction):
+    for shield in self.modules['shield']:
+      if shield.state == ShieldState.enabled and angle_diff(direction, shield.direction) < shield.arc * 0.5:
+        damage = shield.do_damage(damage)
+    return max(0.0, damage)
+
+  def do_node_damage(self, damage, direction):
+    source_dist = max(hypot(n.x, n.y) for n in self.nodes) + 10.0
+    source = (cos(direction) * source_dist, sin(direction) * source_dist)
+    sorted_nodes = sorted(self.nodes, key=lambda n: hypot(*sub_vec((n.x, n.y), source)))
+    for n in sorted_nodes:
+      if n.hp > 0 and random.uniform(0., 1.) < .9:
+        n.do_damage(damage)
+        break
+    else:
+      for n in sorted_nodes:
+        if n.hp > 0:
+          n.do_damage(damage)
+
+  def do_damage(self, damage, direction):
+    print('DMG: ', damage)
+    remaining_damage = self.do_shield_damage(damage, direction)
+    if remaining_damage > 0.0:
+      self.do_node_damage(remaining_damage, direction)
 
   def avg_dmg(self, role):
     if role in self.modules and len(self.modules[role]) > 0:
