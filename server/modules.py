@@ -212,17 +212,21 @@ class ShipEnergyBank(ShipModule, EnergySink, EnergySource):
     self.energy     =    0.0
     self.max_energy = 1000.0
 
+  def update(self):
+    super().update()
+    self.energy = min(self.energy, self.max_energy * (1.0 - self.damage))
+
   def required_energy(self):
-    return self.max_energy - self.energy
+    return self.max_energy * (1.0 - self.damage) - self.energy
 
   def consume_energy(self, energy):
-    self.energy = clamp(self.energy + energy, 0.0, self.max_energy)
+    self.energy = clamp(self.energy + energy, 0.0, self.max_energy * (1.0 - self.damage))
 
   def available_energy(self):
     return self.energy
 
   def produce_energy(self, energy):
-    self.energy = clamp(self.energy - energy, 0.0, self.max_energy)
+    self.energy = clamp(self.energy - energy, 0.0, self.max_energy * (1.0 - self.damage))
 
 class WeaponState(Enum):
   idle   = 'idle'
