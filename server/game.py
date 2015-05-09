@@ -108,5 +108,9 @@ class Game:
     loop.call_later(max(0.0, 1.0/self.ticks_per_second - (end - start)), self.update)
 
   def apply_diff(self, diff):
-    if 'world' in diff:
-      self.world.apply_diff(diff['world'])
+    for key in diff:
+      if key == 'world':
+        self.world.apply_diff(diff['world'])
+      else:
+        raise ProtocolError(reason='Unknown key "%s" in root' % key)
+    
