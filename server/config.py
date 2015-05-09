@@ -10,6 +10,6 @@ def init_game(game):
   game.world.ships[ship_id].x += 60
   ship_id = game.world.addShip(t.ship_templates['debug_ship_3']())
   game.world.ships[ship_id].x -= 60
-  #for i in range(50):
-  #  ship_id = game.world.addShip(t.ship_templates['debug_ship_1']())
-  #  game.world.ships[ship_id].x += 120
+  for i in range(50):
+    ship_id = game.world.addShip(t.ship_templates['debug_ship_1']())
+    game.world.ships[ship_id].x += 120

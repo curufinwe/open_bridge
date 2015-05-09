@@ -17,7 +17,7 @@ class Body
     return sprite
   end
 
-  def state(*names)
+  def state(names)
     res = @state.get(@state_path+names)
     return res
   end
@@ -37,8 +37,8 @@ class Body
     @alive = false
   end
 
-  def x; state :x; end
-  def y; state :y; end
+  def x; state ["x"]; end
+  def y; state ["y"]; end
 
   def alive?
     return @alive
@@ -56,19 +56,19 @@ class Ship < Body
   end
 
   def rot
-    state :direction
+    state ["direction"]
   end
 
   def weapons
-    state "modules", "weapon"
+    state ["modules", "weapon"]
   end
 
   def update_sprite(sprite)
     sprite[:x] = self.x
     sprite[:y] = self.y
-    sprite[:rotation] = state :direction
-    sprite[:body][:velocity][:x] = state :dx
-    sprite[:body][:velocity][:y] = state :dy
+    sprite[:rotation] = state ["direction"]
+    sprite[:body][:velocity][:x] = state ["dx"]
+    sprite[:body][:velocity][:y] = state ["dy"]
   end
 
   def attackable?

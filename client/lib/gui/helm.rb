@@ -60,7 +60,7 @@ class HelmInterface < Gui
       @helm_target.y=my
       dirx, diry = mx-sx, my-sy
       angle = JSMath.atan2(dirx,diry)*JSMath::RadToDeg
-      shipa = active_ship.state(:direction)*JSMath::RadToDeg
+      shipa = active_ship.rot*JSMath::RadToDeg
       adiff = angle-shipa
       adiff = JSMath.clamp_angle180(adiff)
       throttle_rot = (JSMath.clamp(-90, adiff, 90) / 90.0)

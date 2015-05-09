@@ -16,8 +16,8 @@ class Cone
   end
 
   def update_params
-    new_length = @length || @ship.state("modules","weapon",@weapon_id,"max_range")
-    new_firing_arc = @firing_arc || @ship.state("modules","weapon",@weapon_id,"firing_arc")*JSMath::RadToDeg
+    new_length = @length || @ship.state(["modules","weapon",@weapon_id,"max_range"])
+    new_firing_arc = @firing_arc ||  @ship.state(["modules","weapon",@weapon_id,"firing_arc"])*JSMath::RadToDeg
     if new_length != @length || new_firing_arc != @firing_arc
       @needs_redraw = true 
       @length = new_length

@@ -42,11 +42,12 @@ $erb_binding = Commands.new
 
 class HTTPHandler < EM::HttpServer::Server
 
-    def compile_app
+    def compile(path)
       Opal.append_path("app")
       Opal.append_path("lib")
+      Opal.append_path("tests")
       puts "not slacking of, code is compiling"
-      mainjs = Opal::Builder.build('main')
+      mainjs = Opal::Builder.build(path)
       return mainjs
     end
 
@@ -67,7 +68,9 @@ class HTTPHandler < EM::HttpServer::Server
           if File.exist?(path)
           response.content = File.read(path)
           elsif path.end_with? "/app/main.js"
-            response.content = compile_app
+            response.content = compile("main")
+          elsif path=~ /tests\/[^\/]+.js\Z/
+            response.content = compile(path.split("/").last.gsub(".js",""))
           elsif path.end_with? ".css"
             response.content = compile_css(path)
           #elsif File.exist?(path+".erb")

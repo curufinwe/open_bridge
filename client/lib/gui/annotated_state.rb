@@ -1,9 +1,10 @@
+require 'common/js_hash'
 class AnotatedState < State
   attr_accessor :ids_to_bodies, :active_ship
 
   def initialize(*args)
-    super(*args)
-    @ids_to_bodies = {}
+    super(JShash)
+    @ids_to_bodies = @hash_class.new
   end
 
   def events
@@ -15,8 +16,10 @@ class AnotatedState < State
   end
 
   def ships
-    ships = get(%w{world ships}, {})
-    return ships.each_key.map{|id| @ids_to_bodies[id]}
+    ships = get(%w{world ships}, :or_empty)
+    res = []
+    ships.each_key{|id| res << @ids_to_bodies[id]}
+    return res
   end
 
   def bodies
@@ -33,14 +36,14 @@ class AnotatedState < State
   end
 
   def update_ships!()
-    get(%w{world ships},{}).each_key do |id|
+    get(%w{world ships},:or_empty).each_key do |id|
       @ids_to_bodies[id] ||= Ship.new(self, id)
     end
   end
 
   def delete_dead_bodies!
     @ids_to_bodies.delete_if do |id,body|
-      still_alive = get(%w{world ships}, {}).include?(id) || get(%w{world bodies}, {}).include?(id)
+      still_alive = get(%w{world ships}, :or_empty).include?(id) || get(%w{world bodies}, :or_empty).include?(id)
       body.destroy unless still_alive #I'm making a note here
       !still_alive
     end

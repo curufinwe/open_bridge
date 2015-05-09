@@ -27,7 +27,7 @@ class WeaponsStatusDisplay < Gui
 
   def update_bars
     @weapon_bars.each_pair do |id,bar|
-      status = active_ship.state("modules","weapon",id)
+      status = active_ship.state(["modules","weapon",id])
       bar.percentage = status["energy"]/status["max_energy"]
       bar.update
     end
@@ -38,7 +38,7 @@ class WeaponsStatusDisplay < Gui
     @weapon_bars.each_value(&:destroy)
     @weapon_bars = {} 
     bar_pos =[40,40]
-    active_ship.state("modules","weapon").each_pair do |weap_id, weapon|
+    active_ship.state(["modules","weapon"]).each_pair do |weap_id, weapon|
       bar_pos[0]+30
       bar = @weapon_bars[weap_id] = Bar.new(@game, bar_pos, 10, 50, 0x00ff00, 0xff0000)
     end

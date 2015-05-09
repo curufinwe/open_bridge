@@ -3,7 +3,7 @@ require 'gui/gui'
 class ConeDisplay < Gui
 
   def create
-    @ships_to_weapons = {}
+    @ships_to_weapons = JShash.new
   end
 
   def update
