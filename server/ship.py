@@ -63,7 +63,7 @@ class Ship(Serializable):
     self.desired_rot_accel =  0.0
 
     self.max_speed         = 10.0
-    self.max_rot           =  0.1
+    self.max_rot           =  0.02
     self.radius            = 30.0
 
     self.state             = ShipState.operational

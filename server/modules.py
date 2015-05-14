@@ -105,7 +105,7 @@ class ShipEngine(ShipModule, EnergySink):
     self.max_energy_consumption_accel     = 50.0
     self.max_energy_consumption_rot_accel =  5.0
     self.max_accel                        =  0.2
-    self.max_rot_accel                    =  0.01
+    self.max_rot_accel                    =  0.00075
 
     self.accel                            =  0.0
     self.rot_accel                        =  0.0
@@ -260,7 +260,7 @@ class ShipLaser(ShipModule, EnergySink):
 
   def __init__(self):
     super().__init__()
-    self.power       =  20.0
+    self.power       =  50.0
     self.min_range   =  10.0
     self.max_range   = 200.0
     self.direction   =   0.0
@@ -348,12 +348,12 @@ class ShipShield(ShipModule, EnergySink):
   def __init__(self):
     super().__init__()
 
-    self.base_energy_consumption =  00.0
-    self.recharge_rate           =   1.0
+    self.base_energy_consumption =   0.0
+    self.recharge_rate           =   2.0
     self.recharge_efficiency     =   1.0
-    self.regen_rate              =   0.1
+    self.regen_rate              =   0.10 
     self.regen_efficiency        =   0.05
-    self.design_capacity         = 100.0
+    self.design_capacity         = 250.0
     self.direction               =   0.0
     self.arc                     = deg2rad(180.)
 
@@ -370,9 +370,9 @@ class ShipShield(ShipModule, EnergySink):
   def required_energy(self):
     if self.state == ShieldState.disabled:
       return 0.0
-    regen_energy    = min(self.regen_rate   , (self.design_capacity - self.strength_limit) / self.regen_efficiency)
+    regen_energy    = min(self.regen_rate   , (self.design_capacity - self.strength_limit)) / self.regen_efficiency
     max_regen       = regen_energy * self.regen_efficiency
-    recharge_energy = min(self.recharge_rate, (self.strength_limit + max_regen - self.strength) / self.recharge_efficiency)
+    recharge_energy = min(self.recharge_rate, (self.strength_limit + max_regen - self.strength)) / self.recharge_efficiency
     return self.base_energy_consumption + max(0.0, regen_energy + recharge_energy)
 
   def consume_energy(self, energy):
@@ -393,9 +393,10 @@ class ShipShield(ShipModule, EnergySink):
     self.strength       = min(self.strength_limit , self.strength + charge_energy * self.recharge_efficiency)
 
   def do_damage(self, damage):
-    eff_dmg = min(self.strength, damage)
-    self.strength -= eff_dmg
-    return damage - eff_dmg
+    prev_strength = self.strength
+    self.strength_limit = clamp(self.strength_limit - damage, 0.0, self.design_capacity)
+    self.strength       = clamp(self.strength       - damage, 0.0, self.strength_limit)
+    return prev_strength - self.strength
 
   def disable(self):
     self.state    = ShieldState.disabled
