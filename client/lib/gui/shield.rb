@@ -41,7 +41,7 @@ class Shield
     first = true
     shield_radius = 30
     (0...segments).each do |i|
-      dx,dy = *JSMath.dir( i*(@arc/(segments-1))*JSMath::DegToRad - (@arc/2)*JSMath::DegToRad, shield_radius )
+      dx,dy = *JSMath.dir( @arcdir*JSMath::DegToRad + i*(@arc/(segments-1))*JSMath::DegToRad - (@arc/2)*JSMath::DegToRad, shield_radius )
       if first
         first = false
         @graphics.moveTo(dx, dy)
