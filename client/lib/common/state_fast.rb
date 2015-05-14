@@ -15,6 +15,7 @@ class State
   end
 
   def set_authoritative(path,val)
+    puts "auth"
     set_iterative(path,@authoritative,val)
   end
 
@@ -92,7 +93,7 @@ class State
 
   def get_iterative(path,root)
     current = root
-    #`debugger`
+    if RUBY_ENGINE != "ruby"
     %x{
       for(var i =0; i< path.length-1; i++){
         current = current['$[]'](path[i]);
@@ -101,11 +102,13 @@ class State
         }
       }
     }
-    #path[0...-1].each do |key|
-    #  puts "getting #{path} in #{root} failed, current should be a hash, but is a #{current.inspect}" unless current.is_a? @hash_class
-    #  current = current[key]
-    #  return false, nil if !current
-    #end
+    else
+      path[0...-1].each do |key|
+        puts "getting #{path} in #{root} failed, current should be a hash, but is a #{current.inspect}" unless current.is_a? @hash_class
+        current = current[key]
+        return false, nil if !current
+      end
+    end
     return false, nil if !current.include?(path.last)
     val = current[path.last]
     return true, val if val.is_a? @hash_class # TODO replace by state_object

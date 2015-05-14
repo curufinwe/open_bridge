@@ -1,6 +1,7 @@
 require 'gui/gui'
 require 'gui/direction_display'
 require 'gui/cone_display'
+require 'gui/shield_display'
 require 'gui/beam_display'
 require 'gui/body_display'
 
@@ -12,6 +13,7 @@ class HelmInterface < Gui
     setup_keyboard_hooks
     create_helm_ui_elements
     add_display(ConeDisplay)
+    add_display(ShieldDisplay)
     add_display(BeamDisplay)
     add_display(DirectionDisplay)
     add_display(BodyDisplay)

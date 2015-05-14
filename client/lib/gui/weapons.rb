@@ -1,6 +1,7 @@
 require 'gui/gui'
 require 'gui/cone_display'
 require 'gui/beam_display'
+require 'gui/shield_display'
 require 'gui/weapons_status_display'
 
 class WeaponsInterface < Gui
@@ -13,6 +14,7 @@ class WeaponsInterface < Gui
   def create()
     create_weapons_ui_elements
     add_display(ConeDisplay)
+    add_display(ShieldDisplay)
     add_display(WeaponsStatusDisplay)
     add_display(BeamDisplay)
     @body_display = add_display(BodyDisplay)

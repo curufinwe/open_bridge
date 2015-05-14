@@ -63,6 +63,10 @@ class Ship < Body
     state ["modules", "weapon"]
   end
 
+  def shields
+    state ["modules", "shield"]
+  end
+
   def update_sprite(sprite)
     sprite[:x] = self.x
     sprite[:y] = self.y
